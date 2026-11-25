@@ -97,6 +97,10 @@
     enable = true;
     headless = false; # enable display/input guest additions (SVGA, drag-drop, etc.)
   };
+  # shortcut: nixpkgs' vmblock unit uses Type=fuse but only mount.fuse3 exists; drop once nixpkgs fixes it.
+  systemd.packages = [
+    (pkgs.writeTextDir "etc/systemd/system/run-vmblock\\x2dfuse.mount.d/fuse3.conf" "[Mount]\nType=fuse3\n")
+  ];
 
   # ---------------------------------------------------------------------------
   # Localisation
@@ -122,7 +126,6 @@
     ];    
     shell              = pkgs.zsh;
     openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH9NnTOBEHqpbxLtYZjPZZI6uGW/VXhclivfFNOIsvjV"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGlSLNdvjdJ8JR54lwCXeEkBnfdEXh+wuzZV45dQLlLP"
     ];
   };
