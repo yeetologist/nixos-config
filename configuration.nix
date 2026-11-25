@@ -122,6 +122,9 @@
       "video"          # camera, GPU, backlight
     ];    
     shell              = pkgs.zsh;
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH9NnTOBEHqpbxLtYZjPZZI6uGW/VXhclivfFNOIsvjV"
+    ];
   };
 
   # Root needs a password so sulogin can open the emergency shell.
