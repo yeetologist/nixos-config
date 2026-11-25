@@ -14,10 +14,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Hardware-specific NixOS modules: CPU scheduler, GPU firmware, SSD tweaks.
-    # Browse available modules: https://github.com/NixOS/nixos-hardware
-    hardware.url = "github:NixOS/nixos-hardware";
-
     # Pre-built nix-index database + the `comma` (,) runner tool.
     nix-index-database = {
       url = "github:nix-community/nix-index-database";

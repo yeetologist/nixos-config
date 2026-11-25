@@ -26,7 +26,7 @@
 
   home.shellAliases = {
     # NixOS
-    up  = "sudo nixos-rebuild switch --flake .#nixos-btw";
+    up  = "sudo nixos-rebuild switch --refresh --flake github:yeetologist/nixos-config#nixos-btw";
     btw = "echo 'I use NixOS, btw'";
     
     # Editor
@@ -131,11 +131,16 @@
   home.packages = with pkgs; [
     # Browser & desktop
     brave
-    ghostty          # GPU-accelerated terminal
+    ghostty            # GPU-accelerated terminal
     xwayland-satellite # XWayland for apps that don't support Wayland yet
+    swaylock           # Wayland screen locker
+    orca               # screen reader
+    zathura            # document viewer
 
-    # Clipboard
-    wl-clipboard     # wl-copy / wl-paste for Wayland
+    # Clipboard & desktop controls
+    wl-clipboard       # wl-copy / wl-paste for Wayland
+    playerctl          # MPRIS media control
+    brightnessctl      # backlight control
 
     # Development
     gnupg
@@ -143,6 +148,9 @@
 
     # Shell utilities
     tmux
+    nnn
+    highlight
+    tldr
 
     # Media
     yt-dlp

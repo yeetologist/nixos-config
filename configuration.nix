@@ -21,8 +21,9 @@
   boot = {
     loader = {
       systemd-boot = {
-        enable      = true;
-        consoleMode = "0"; # use the firmware's native resolution
+        enable             = true;
+        consoleMode        = "0"; # use the firmware's native resolution
+        configurationLimit = 10;
       };
       efi.canTouchEfiVariables = true;
     };
@@ -130,9 +131,12 @@
     ];
   };
 
-  # Root needs a password so sulogin can open the emergency shell.
-  # Change this after first boot: `sudo passwd root`
-  users.users.root.initialPassword = "nixos";
+  # Root is locked; emergency/rescue shells open without a password (console-only VM).
+  users.users.root.hashedPassword = "!";
+  boot.initrd.systemd.emergencyAccess = true;
+  # sulogin refuses a locked root unless forced.
+  systemd.services.emergency.environment.SYSTEMD_SULOGIN_FORCE = "1";
+  systemd.services.rescue.environment.SYSTEMD_SULOGIN_FORCE = "1";
 
 
   # ---------------------------------------------------------------------------
@@ -186,14 +190,10 @@
 
   # ---------------------------------------------------------------------------
   # Wayland / XDG portals
-  # Portals provide OS-level file pickers, screen-share, etc. for Wayland apps.
+  # niri-flake enables xdg.portal, adds xdg-desktop-portal-gnome (screencast),
+  # and ships niri-portals.conf via configPackages; add the GTK portal here.
   # ---------------------------------------------------------------------------
-  xdg.portal = {
-    enable               = true;
-    wlr.enable           = true; # wlroots backend required by Niri
-    config.common.default = "*";
-    extraPortals         = [ pkgs.xdg-desktop-portal-gtk ];
-  };
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
 
   # ---------------------------------------------------------------------------
   # Desktop — Niri (Wayland compositor)
@@ -210,6 +210,7 @@
   security = {
     polkit.enable = true; # required for privilege escalation in Niri/Wayland
     pam.services.login.enableGnomeKeyring = true; # auto-unlock secrets on login
+    pam.services.swaylock = {}; # allow swaylock to authenticate unlocks
   };
 
   # ---------------------------------------------------------------------------
@@ -280,11 +281,11 @@
     registry.nixpkgs.flake = inputs.nixpkgs;
     nixPath = [ "nixpkgs=${inputs.nixpkgs.outPath}" ];
 
-    # Daily garbage collection — removes unreferenced store paths.
+    # Weekly garbage collection — removes store paths older than 14 days.
     gc = {
       automatic = true;
-      dates     = "daily";
-      options   = "-d";
+      dates     = "weekly";
+      options   = "--delete-older-than 14d";
     };
 
     optimise.automatic = true; # hard-link identical files in the store
@@ -298,11 +299,9 @@
       # Binary caches — pre-built closures for community packages.
       substituters = [
         "https://nix-community.cachix.org"
-        "https://cache.numtide.com"
       ];
       trusted-public-keys = [
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-        "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
       ];
     };
   };
