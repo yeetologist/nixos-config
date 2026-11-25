@@ -1,0 +1,307 @@
+# NixOS system configuration for nixos-btw.
+# Options reference: https://search.nixos.org/options
+# Manual:           https://nixos.org/manual/nixos/stable/
+
+# `user` and `timezone` are injected via specialArgs in flake.nix.
+{ lib, pkgs, config, inputs, user, timezone, ... }:
+
+{
+  imports = [
+    ./hardware-configuration.nix
+  ];
+
+  # ---------------------------------------------------------------------------
+  # Nixpkgs
+  # ---------------------------------------------------------------------------
+  nixpkgs.config.allowUnfree = true;
+
+  # ---------------------------------------------------------------------------
+  # Boot
+  # ---------------------------------------------------------------------------
+  boot = {
+    loader = {
+      systemd-boot = {
+        enable      = true;
+        consoleMode = "0"; # use the firmware's native resolution
+      };
+      efi.canTouchEfiVariables = true;
+    };
+    initrd.systemd.enable  = true; # stage-1 systemd (faster, better logging)
+    tmp.useTmpfs           = true; # /tmp lives in RAM — cleared on every boot
+    kernelPackages = pkgs.linuxPackages_latest;
+  };
+
+  services.fstrim.enable = true;
+
+  # ---------------------------------------------------------------------------
+  # Networking
+  # ---------------------------------------------------------------------------
+  networking = {
+    hostName           = "nixos-btw";
+    enableIPv6         = true;
+    networkmanager.enable = true; # manage connections with nmcli / nmtui
+
+    firewall = {
+      enable          = true;
+      allowedTCPPorts = [ 22 ];
+    };
+  };
+
+  # Local, validating DNS resolver with DNSSEC and DNS-over-TLS.
+  # services.unbound = {
+  #   enable = true;
+  #   settings = {
+  #     server = {
+  #       harden-glue            = true;
+  #       harden-dnssec-stripped = true;
+  #       use-caps-for-id        = false; # some servers break with 0x20 encoding
+  #       prefetch               = true;  # pre-fetch popular records
+  #       edns-buffer-size       = 1232;  # safe MTU for DNS-over-TLS
+  #       hide-identity          = true;  # don't leak hostname/version
+  #       hide-version           = true;
+  #     };
+  #     forward-zone = [{
+  #       name               = ".";
+  #       forward-addr       = [
+  #         "1.1.1.1#cloudflare-dns.com"
+  #         "1.0.0.1#cloudflare-dns.com"
+  #       ];
+  #       forward-tls-upstream = true;  # DNS-over-TLS to Cloudflare
+  #     }];
+  #   };
+  # };
+
+  # ---------------------------------------------------------------------------
+  # VMware shared folder
+  # ---------------------------------------------------------------------------
+
+  fileSystems."/mnt/hgfs" = {
+    device = ".host:/";
+    fsType = "fuse.vmhgfs-fuse";
+    options = [
+      "allow_other"
+      "uid=1000"
+      "gid=100"
+      "auto_unmount"
+      "defaults"
+      "nofail"  # don't block boot if VMware shared folders aren't available
+      # These two lines fix the boot timing issue:
+      "x-systemd.automount"
+      "x-systemd.requires=vmtoolsd.service"
+    ];
+  };
+
+  # ---------------------------------------------------------------------------
+  # VMware guest integration
+  # ---------------------------------------------------------------------------
+  virtualisation.vmware.guest = {
+    enable = true;
+    headless = false; # enable display/input guest additions (SVGA, drag-drop, etc.)
+  };
+
+  # ---------------------------------------------------------------------------
+  # Localisation
+  # ---------------------------------------------------------------------------
+  time.timeZone      = timezone;
+  i18n.defaultLocale = "en_US.UTF-8";
+  console.useXkbConfig = true; # keep TTY keymap in sync with Xkb layout
+
+  # ---------------------------------------------------------------------------
+  # Users
+  # ---------------------------------------------------------------------------
+  # Disable imperative passwd changes — manage passwords declaratively.
+  users.mutableUsers = false;
+
+  users.users.${user} = {
+    isNormalUser       = true;
+    hashedPasswordFile = "/etc/passwords/${user}";
+    extraGroups  = [
+      "wheel"          # sudo access
+      "networkmanager" # nmcli without sudo
+      "audio"          # direct audio device access
+      "video"          # camera, GPU, backlight
+    ];    
+    shell              = pkgs.zsh;
+  };
+
+  # Root needs a password so sulogin can open the emergency shell.
+  # Change this after first boot: `sudo passwd root`
+  users.users.root.initialPassword = "nixos";
+
+
+  # ---------------------------------------------------------------------------
+  # Environment
+  # ---------------------------------------------------------------------------
+  environment.variables = {
+    EDITOR           = "nvim";
+    VISUAL           = "nvim";
+    NIXPKGS_ALLOW_UNFREE = "1";
+  };
+
+  # Use $HOME (not ${HOME}) so pam_env can rewrite it to @{HOME} for early PAM.
+  environment.sessionVariables = {
+    XDG_CACHE_HOME = "$HOME/.cache";
+    XDG_CONFIG_HOME = "$HOME/.config";
+    XDG_BIN_HOME   = "$HOME/.local/bin";
+    XDG_DATA_HOME  = "$HOME/.local/share";
+    XDG_STATE_HOME = "$HOME/.local/state";
+  };
+
+  environment.localBinInPath  = true;
+  environment.defaultPackages = []; # opt-out of the default NixOS package set
+
+  # System-level packages only — prefer home.packages for user tools.
+  environment.systemPackages = with pkgs; [
+    # Network
+    wget 
+
+    # Process management
+    killall moreutils
+
+    # System inspection
+    htop lm_sensors usbutils pciutils strace fastfetch
+  ];
+
+  # ---------------------------------------------------------------------------
+  # Fonts
+  # ---------------------------------------------------------------------------
+  fonts.packages = with pkgs; [
+    nerd-fonts.jetbrains-mono
+  ];
+
+  # ---------------------------------------------------------------------------
+  # Audio — Pipewire (PulseAudio + ALSA + JACK compatibility)
+  # ---------------------------------------------------------------------------
+  services.pipewire = {
+    enable       = true;
+    alsa.enable  = true;
+    pulse.enable = true;
+    jack.enable  = true;
+  };
+
+  # ---------------------------------------------------------------------------
+  # Wayland / XDG portals
+  # Portals provide OS-level file pickers, screen-share, etc. for Wayland apps.
+  # ---------------------------------------------------------------------------
+  xdg.portal = {
+    enable               = true;
+    wlr.enable           = true; # wlroots backend required by Niri
+    config.common.default = "*";
+    extraPortals         = [ pkgs.xdg-desktop-portal-gtk ];
+  };
+
+  # ---------------------------------------------------------------------------
+  # Desktop — Niri (Wayland compositor)
+  # ---------------------------------------------------------------------------
+  programs.niri.enable  = true;
+  programs.dconf.enable = true; # allows GTK apps to persist their settings
+
+  # ---------------------------------------------------------------------------
+  # Security
+  # ---------------------------------------------------------------------------
+  security = {
+    polkit.enable = true; # required for privilege escalation in Niri/Wayland
+    pam.services.login.enableGnomeKeyring = true; # auto-unlock secrets on login
+  };
+
+  # ---------------------------------------------------------------------------
+  # Services
+  # ---------------------------------------------------------------------------
+  services = {
+    openssh = {
+      enable = true;
+      settings = {
+        PasswordAuthentication       = false; # keys only
+        KbdInteractiveAuthentication = false;
+        PermitRootLogin              = "no";
+      };
+    };
+
+    gnome.gnome-keyring.enable = true; # secret storage for GUI apps
+
+    dbus.enable       = true;  # IPC bus; required by most desktop services
+    irqbalance.enable = true;  # distribute hardware interrupts across CPU cores
+    fwupd.enable      = true;  # firmware updates via LVFS (https://fwupd.org)
+
+    # btrfs health checks — scrubs read every block and verifies checksums.
+    btrfs.autoScrub = {
+      enable      = true;
+      interval    = "monthly";
+      fileSystems = [ "/" ];
+    };
+
+    # Automatic btrfs snapshots of /home with timeline-based cleanup.
+    snapper.configs.home = {
+      SUBVOLUME       = "/home";
+      ALLOW_USERS     = [ user ];
+      TIMELINE_CREATE = true;
+      TIMELINE_CLEANUP = true;
+    };
+  };
+
+  # ---------------------------------------------------------------------------
+  # Programs
+  # ---------------------------------------------------------------------------
+  programs = {
+    zsh.enable          = true;
+    gnupg.agent.enable  = true;
+    ssh.enableAskPassword = false; # don't pop up a GUI password dialog for SSH
+
+    # nix-locate: search which package provides a given file path.
+    # comma (,): run any nixpkgs binary ad-hoc, e.g.  , cowsay hello
+    nix-index.enable = true;
+    nix-index-database.comma.enable = true;
+    command-not-found.enable = false; # replaced by nix-index's hook
+  };
+
+  # ---------------------------------------------------------------------------
+  # Virtualisation (remove for bare-metal installs)
+  # ---------------------------------------------------------------------------
+  # virtualisation.vmware.guest.enable = true;
+
+  # ---------------------------------------------------------------------------
+  # Hardware
+  # ---------------------------------------------------------------------------
+  hardware.enableRedistributableFirmware = true; # Wi-Fi cards, GPU microcode, etc.
+
+  # ---------------------------------------------------------------------------
+  # Nix daemon
+  # ---------------------------------------------------------------------------
+  nix = {
+    # Pin legacy `nix-shell` / <nixpkgs> to the exact flake revision.
+    registry.nixpkgs.flake = inputs.nixpkgs;
+    nixPath = [ "nixpkgs=${inputs.nixpkgs.outPath}" ];
+
+    # Daily garbage collection — removes unreferenced store paths.
+    gc = {
+      automatic = true;
+      dates     = "daily";
+      options   = "-d";
+    };
+
+    optimise.automatic = true; # hard-link identical files in the store
+
+    settings = {
+      experimental-features = [ "nix-command" "flakes" ];
+      auto-optimise-store   = false;
+      max-jobs              = "auto"; # parallel builds = number of CPUs
+      cores                 = 0;      # each job uses all available cores
+
+      # Binary caches — pre-built closures for community packages.
+      substituters = [
+        "https://nix-community.cachix.org"
+        "https://cache.numtide.com"
+      ];
+      trusted-public-keys = [
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+      ];
+    };
+  };
+
+  # ---------------------------------------------------------------------------
+  # State version
+  # Set once at install time. Do NOT change — see `man configuration.nix`.
+  # ---------------------------------------------------------------------------
+  system.stateVersion = "26.05";
+}
