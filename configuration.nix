@@ -196,10 +196,10 @@
   # ---------------------------------------------------------------------------
   # Desktop — Niri (Wayland compositor)
   # ---------------------------------------------------------------------------
-  # niri-stable from niri-flake needs libdisplay-info_0_2, which nixpkgs-unstable removed.
-  nixpkgs.overlays      = [ inputs.niri.overlays.niri ];
+  # niri-flake's own builds need libdisplay-info_0_2, which nixpkgs-unstable removed;
+  # use nixpkgs' niri (cached on cache.nixos.org) with the niri-flake module.
   programs.niri.enable  = true;
-  programs.niri.package = pkgs.niri-unstable;
+  programs.niri.package = pkgs.niri;
   programs.dconf.enable = true; # allows GTK apps to persist their settings
 
   # ---------------------------------------------------------------------------
