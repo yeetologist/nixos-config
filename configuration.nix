@@ -26,7 +26,6 @@
       };
       efi.canTouchEfiVariables = true;
     };
-    initrd.systemd.enable  = true; # stage-1 systemd (faster, better logging)
     tmp.useTmpfs           = true; # /tmp lives in RAM — cleared on every boot
     kernelPackages = pkgs.linuxPackages_latest;
   };
