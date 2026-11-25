@@ -4,10 +4,6 @@
     prefer-no-csd = true; # use server-side decorations instead of drawing their own title bars
     animations.enable = false; # Disables ALL animations in niri
 
-    environment = {
-      DISPLAY = ":0:";
-    };
-
     input.keyboard.xkb.layout = "us";
 
     layout = {
@@ -37,13 +33,8 @@
       }
     ];
 
+    # niri starts xwayland-satellite itself and sets DISPLAY; vmusr syncs the clipboard through it.
     spawn-at-startup = [
-      {
-        command = [
-          "xwayland-satellite"
-          ":0"
-        ];
-      }
       {
         command = [
           "sh"
