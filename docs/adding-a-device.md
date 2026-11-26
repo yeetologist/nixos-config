@@ -73,14 +73,15 @@ Until it's pushed, rebuild with `sudo nixos-rebuild switch --flake ~/nixos-confi
 - **Disk**: wiped, unless you pick keep-home.
 - **Mode**: only for a disk that already has this layout. `w` wipes everything; `k` keeps `/home` and reinstalls the system.
 - **Swap** in GiB: default is RAM, capped at 8.
+- **User name**: only when installing from a local clone. Enter keeps `user` from `flake.nix`; a new name rewrites that line (staged, commit it later).
 - **Hostname**: network name, unique per machine. Separate from the host folder name.
-- **Password** for the user named in `flake.nix` (`user`): typed twice. Root has no password.
+- **Password** for that user: typed twice. Root has no password.
 - **Confirmation**: type the disk name.
 
 **Rebuild** (after the host is on GitHub): `up`, which is short for
 `sudo nixos-rebuild switch --refresh --flake github:yeetologist/nixos-config#<this host>`.
 
-**User name, timezone:** set once in `flake.nix` (`user`, `timezone`); everything else, including `install.sh`, reads them from there.
+**User name, timezone:** set once in `flake.nix` (`user`, `timezone`); everything else reads them from there. `install.sh` can change `user` for you when installing from a local clone.
 
 **Rename a machine:** `echo new-name | sudo tee /etc/hostname && sudo reboot` (`hostnamectl` can't write it on NixOS).
 

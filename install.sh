@@ -2,7 +2,7 @@
 # Install nixos-btw from the NixOS installer ISO (as root):
 #   bash <(curl -sL https://raw.githubusercontent.com/yeetologist/nixos-config/main/install.sh)
 # From a local clone (new host not pushed yet), copied to ~/nixos-config on the new system:
-#   FLAKE=/tmp/nixos-config#laptop bash /tmp/nixos-config/install.sh
+#   FLAKE=/tmp/nixos-config#laptop bash /tmp/nixos-config/install.sh   (also lets you change the user name)
 # Modes: wipe the whole disk, or reinstall keeping /home (@home and its snapshots survive).
 # Layout must match hosts/disk.nix: labels BOOT/swap/nixos, subvolumes @ @home @nix.
 set -euo pipefail
@@ -50,9 +50,32 @@ fi
 
 # --- User name: read from the flake (flake.nix `user`), not hardcoded here ------------
 [[ $flake == *#* ]] || die "FLAKE must look like <flake>#<host>"
-echo "Evaluating $flake ..."
-user=$(nix --extra-experimental-features 'nix-command flakes' eval --raw   "${flake%%#*}#nixosConfigurations.${flake#*#}.config.home-manager.users"   --apply 'u: builtins.head (builtins.attrNames u)') || die "can't evaluate $flake"
-[[ $user =~ ^[a-z_][a-z0-9_-]*$ ]] || die "unexpected user name from flake: $user"
+valid_user='^[a-z_][a-z0-9_-]{0,31}$'
+flake_user() {
+  echo "Evaluating $flake ..." >&2
+  nix --extra-experimental-features 'nix-command flakes' eval --raw \
+    "${flake%%#*}#nixosConfigurations.${flake#*#}.config.home-manager.users" \
+    --apply 'u: builtins.head (builtins.attrNames u)' || die "can't evaluate $flake"
+}
+user=$(flake_user)
+[[ $user =~ $valid_user ]] || die "unexpected user name from flake: $user"
+
+# Local clone: the name can be changed here (edits `user = "...";` in its flake.nix).
+# From GitHub the flake is read-only, so the pushed name is used.
+if [ -d "$src" ]; then
+  read -rp "User name [$user]: " new_user
+  if [ -n "$new_user" ] && [ "$new_user" != "$user" ]; then
+    [[ $new_user =~ $valid_user ]] || die "user name: lowercase letters, digits, '_', '-'; starts with a letter or '_'"
+    [ "$(grep -cE '^\s*user\s*=\s*"[^"]*";' "$src/flake.nix")" = 1 ] || die "can't find one 'user = \"...\";' line in $src/flake.nix"
+    sed -i -E "s/^(\s*user\s*=\s*)\"[^\"]*\";/\1\"$new_user\";/" "$src/flake.nix"
+    git -C "$src" add flake.nix
+    user=$(flake_user)
+    [ "$user" = "$new_user" ] || die "flake.nix edited but the flake still says user '$user'"
+    echo "flake.nix now uses user '$user' (staged; commit it after the install)."
+  fi
+else
+  echo "User: $user (from the flake; install from a local clone to change it)"
+fi
 
 # --- Hostname (not in the flake, so clones don't clash; written to /etc/hostname) ---
 read -rp "Hostname [nixos-btw]: " host
