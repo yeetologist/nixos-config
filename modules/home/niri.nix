@@ -121,6 +121,11 @@
         action.spawn = [ "power-menu" ];
         repeat = false;
       };
+      "Mod+B" = {
+        hotkey-overlay.title = "Toggle Waybar show / hide";
+        action.spawn-sh = "pkill -USR1 -x waybar || waybar";
+        repeat = false;
+      };
       "Super+Alt+L" = {
         hotkey-overlay.title = "Lock screen (Mod+Alt+L)";
         action.spawn = "swaylock";

@@ -91,6 +91,7 @@ let
             ]),
             ("System", RED, [
                 ("Mod + Alt + L",       "Lock screen"),
+                ("Mod + B",             "Toggle Waybar"),
                 ("Mod + Shift + P",     "Power off monitors"),
                 ("Mod + Esc",           "Toggle shortcut inhibit"),
                 ("Mod + Shift + /",     "This hotkey cheatsheet"),
