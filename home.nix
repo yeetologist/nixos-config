@@ -5,6 +5,7 @@
 {
   imports = [
     ./modules/home/bash.nix
+    ./modules/home/desktop.nix
     ./modules/home/display-menu.nix
     ./modules/home/git.nix
     ./modules/home/niri.nix

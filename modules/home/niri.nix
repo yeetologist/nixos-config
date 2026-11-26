@@ -5,7 +5,17 @@
     animations.enable = false; # Disables ALL animations in niri
     hotkey-overlay.hide-not-bound = true;
 
-    input.keyboard.xkb.layout = "us";
+    input = {
+      keyboard.xkb.layout = "us";
+      touchpad = {
+        tap = true;
+        dwt = true;
+        natural-scroll = true;
+      };
+      mouse = {
+        accel-profile = "flat";
+      };
+    };
 
     layout = {
       default-column-width = { proportion = 0.5; };
@@ -33,12 +43,26 @@
         default-column-width = { fixed = 760; };
         default-window-height = { fixed = 540; };
       }
+      {
+        matches = [ { app-id = "^com\\.bam\\.floating$"; } ];
+        open-floating = true;
+        default-column-width = { fixed = 1000; };
+        default-window-height = { fixed = 700; };
+      }
     ];
 
     spawn-at-startup = [
       {
         command = [
           "waybar"
+        ];
+      }
+      {
+        # Solid dark background; swap "-c" "#1a1b26" for "-i" "/path/to/img.png" "-m" "fill" anytime.
+        command = [
+          "swaybg"
+          "-c"
+          "#1a1b26"
         ];
       }
     ];
@@ -59,10 +83,50 @@
         hotkey-overlay.title = "App launcher (Rofi)";
         action.spawn = [ "rofi" "-show" "drun" ];
       };
-      "Super+Alt+L" = {
-        hotkey-overlay.title = "Lock screen";
-        action.spawn = "swaylock";
+      "Alt+Tab" = {
+        hotkey-overlay.title = "Window switcher (Alt+Tab)";
+        action.spawn = [ "rofi" "-show" "window" ];
+        repeat = false;
       };
+      "Mod+E" = {
+        hotkey-overlay.title = "File manager (yazi)";
+        action.spawn = [ "ghostty" "-e" "yazi" ];
+      };
+      "Mod+Shift+E" = {
+        hotkey-overlay.title = "File manager (Thunar)";
+        action.spawn = "thunar";
+      };
+      "Ctrl+Shift+Escape" = {
+        hotkey-overlay.title = "Task Manager (btop)";
+        action.spawn = [ "ghostty" "--class=com.bam.floating" "-e" "btop" ];
+        repeat = false;
+      };
+      "Mod+N" = {
+        hotkey-overlay.title = "Notification center (SwayNC)";
+        action.spawn = [ "swaync-client" "-t" "-sw" ];
+        repeat = false;
+      };
+      "Mod+V" = {
+        hotkey-overlay.title = "Clipboard history (Win+V)";
+        action.spawn = [ "clipboard-menu" ];
+        repeat = false;
+      };
+      "Mod+Period" = {
+        hotkey-overlay.title = "Emoji picker (Win+.)";
+        action.spawn = [ "rofimoji" "--selector" "rofi" "--action" "type" "copy" ];
+        repeat = false;
+      };
+      "Mod+X" = {
+        hotkey-overlay.title = "Power menu (Win+X)";
+        action.spawn = [ "power-menu" ];
+        repeat = false;
+      };
+      "Mod+L" = {
+        hotkey-overlay.title = "Lock screen (Win+L)";
+        action.spawn = "swaylock";
+        repeat = false;
+      };
+      "Super+Alt+L".action.spawn = "swaylock";
 
       "Super+Alt+S" = {
         hotkey-overlay.title = "Toggle screen reader (Orca)";
@@ -161,11 +225,10 @@
       "Mod+Left"  = { hotkey-overlay.title = "Focus column left (or H)";  action.focus-column-left = [ ]; };
       "Mod+Down"  = { hotkey-overlay.title = "Focus window down (or J)";  action.focus-window-down = [ ]; };
       "Mod+Up"    = { hotkey-overlay.title = "Focus window up (or K)";    action.focus-window-up = [ ]; };
-      "Mod+Right" = { hotkey-overlay.title = "Focus column right (or L)"; action.focus-column-right = [ ]; };
+      "Mod+Right" = { hotkey-overlay.title = "Focus column right"; action.focus-column-right = [ ]; };
       "Mod+H".action.focus-column-left = [ ];
       "Mod+J".action.focus-window-down = [ ];
       "Mod+K".action.focus-window-up = [ ];
-      "Mod+L".action.focus-column-right = [ ];
 
       # Moving windows within workspace layout
       "Mod+Ctrl+Left"  = { hotkey-overlay.title = "Move column left (or H)";  action.move-column-left = [ ]; };
@@ -274,7 +337,6 @@
       "Mod+BracketLeft"  = { hotkey-overlay.title = "Consume or expel window left";  action.consume-or-expel-window-left = [ ]; };
       "Mod+BracketRight" = { hotkey-overlay.title = "Consume or expel window right"; action.consume-or-expel-window-right = [ ]; };
       "Mod+Comma"        = { hotkey-overlay.title = "Consume window into column";    action.consume-window-into-column = [ ]; };
-      "Mod+Period"       = { hotkey-overlay.title = "Expel window from column";      action.expel-window-from-column = [ ]; };
 
       # Layout scale presets and sizing alterations
       "Mod+R"            = { hotkey-overlay.title = "Cycle column width preset";      action.switch-preset-column-width = [ ]; };
@@ -296,14 +358,15 @@
       "Mod+Shift+Equal" = { hotkey-overlay.title = "Window height +10%"; action.set-window-height = "+10%"; };
 
       # Layout modes & transitions
-      "Mod+V"       = { hotkey-overlay.title = "Toggle floating window";            action.toggle-window-floating = [ ]; };
-      "Mod+Shift+V" = { hotkey-overlay.title = "Switch focus floating / tiling";    action.switch-focus-between-floating-and-tiling = [ ]; };
-      "Mod+W"       = { hotkey-overlay.title = "Toggle tabbed column display";      action.toggle-column-tabbed-display = [ ]; };
+      "Mod+Shift+Space" = { hotkey-overlay.title = "Toggle floating window";         action.toggle-window-floating = [ ]; };
+      "Mod+Shift+V"     = { hotkey-overlay.title = "Switch focus floating / tiling"; action.switch-focus-between-floating-and-tiling = [ ]; };
+      "Mod+W"           = { hotkey-overlay.title = "Toggle tabbed column display";   action.toggle-column-tabbed-display = [ ]; };
 
       # Graphics / Screen Capture pipelines
-      "Print"      = { hotkey-overlay.title = "Screenshot (interactive)"; action.screenshot = [ ]; };
-      "Ctrl+Print" = { hotkey-overlay.title = "Screenshot screen";        action.screenshot-screen = [ ]; };
-      "Alt+Print"  = { hotkey-overlay.title = "Screenshot window";        action.screenshot-window = [ ]; };
+      "Print"       = { hotkey-overlay.title = "Screenshot (interactive)";              action.screenshot = [ ]; };
+      "Mod+Shift+S" = { hotkey-overlay.title = "Screenshot / Snipping Tool (Win+Shift+S)"; action.screenshot = [ ]; };
+      "Ctrl+Print"  = { hotkey-overlay.title = "Screenshot screen";                     action.screenshot-screen = [ ]; };
+      "Alt+Print"   = { hotkey-overlay.title = "Screenshot window";                     action.screenshot-window = [ ]; };
 
       # System constraints & hardware state switches
       "Mod+Escape" = {
@@ -311,11 +374,10 @@
         action.toggle-keyboard-shortcuts-inhibit = [ ];
         allow-inhibiting = false;
       };
-      "Mod+Shift+E" = {
-        hotkey-overlay.title = "Quit Niri (or Ctrl+Alt+Del)";
+      "Ctrl+Alt+Delete" = {
+        hotkey-overlay.title = "Quit Niri";
         action.quit = [ ];
       };
-      "Ctrl+Alt+Delete".action.quit = [ ];
       "Mod+Shift+P" = {
         hotkey-overlay.title = "Power off monitors";
         action.power-off-monitors = [ ];

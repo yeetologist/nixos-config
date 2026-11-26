@@ -17,7 +17,7 @@
 
         modules-left   = [ "custom/launcher" "niri/workspaces" "wlr/taskbar" ];
         modules-center = [ ];
-        modules-right  = [ "tray" "cpu" "memory" "network" "pulseaudio" "battery" "clock" ];
+        modules-right  = [ "tray" "cpu" "memory" "network" "bluetooth" "pulseaudio" "battery" "clock" "custom/notifications" "custom/power" ];
 
         # -- Left: Start button, workspaces, open windows taskbar --
         "custom/launcher" = {
@@ -61,7 +61,17 @@
           format-wifi         = "󰖩 {essid}";
           format-ethernet     = "󰈀 {ipaddr}";
           format-disconnected = "󰖪 Offline";
-          tooltip-format      = "{ifname}: {ipaddr}/{cidr}";
+          tooltip-format      = "{ifname}: {ipaddr}/{cidr}\nClick to configure (nmtui)";
+          on-click            = "ghostty --class=com.bam.floating -e nmtui";
+        };
+
+        bluetooth = {
+          format           = "󰂯 {status}";
+          format-connected = "󰂱 {device_alias}";
+          format-disabled  = "";
+          format-off       = "";
+          tooltip-format   = "{controller_alias}\t{controller_address}\n{num_connections} connected";
+          on-click         = "blueman-manager";
         };
 
         pulseaudio = {
@@ -84,6 +94,34 @@
           format         = "{:%H:%M\n%Y-%m-%d}";
           format-alt     = "{:%H:%M:%S\n%a %b %d}";
           tooltip-format = "<big>{:%B %Y}</big>\n<tt><small>{calendar}</small></tt>";
+        };
+
+        "custom/notifications" = {
+          tooltip        = true;
+          format         = "{icon}";
+          format-icons   = {
+            notification              = "󱅫";
+            none                      = "󰂚";
+            dnd-notification          = "󰂛";
+            dnd-none                  = "󰂛";
+            inhibited-notification    = "󱅫";
+            inhibited-none            = "󰂚";
+            dnd-inhibited-notification = "󰂛";
+            dnd-inhibited-none        = "󰂛";
+          };
+          return-type    = "json";
+          exec-if        = "which swaync-client";
+          exec           = "swaync-client -swb";
+          on-click       = "swaync-client -t -sw";
+          on-click-right = "swaync-client -d -sw";
+          escape         = true;
+        };
+
+        "custom/power" = {
+          format         = "󰐥";
+          tooltip        = true;
+          tooltip-format = "Power menu (Mod+X)";
+          on-click       = "power-menu";
         };
       };
     };
@@ -154,13 +192,18 @@
         border-bottom: 2px solid #7aa2f7;
       }
 
-      #tray, #cpu, #memory, #network, #pulseaudio, #battery {
+      #tray, #cpu, #memory, #network, #bluetooth, #pulseaudio, #battery, #custom-notifications, #custom-power {
         padding: 0 9px;
         color: #c0caf5;
       }
 
-      #pulseaudio:hover, #network:hover, #clock:hover {
+      #pulseaudio:hover, #network:hover, #bluetooth:hover, #clock:hover, #custom-notifications:hover, #custom-power:hover {
         background-color: rgba(192, 202, 245, 0.08);
+      }
+
+      #custom-power {
+        padding: 0 12px;
+        color: #f7768e;
       }
 
       #clock {

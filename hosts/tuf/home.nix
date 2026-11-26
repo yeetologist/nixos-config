@@ -27,6 +27,15 @@
   programs.zoxide.enable = true;                         # `z <dir>`, hooks into nushell
   programs.direnv = { enable = true; nix-direnv.enable = true; }; # per-project dev shells on `cd`
 
+  # Laptop-only desktop services: Bluetooth tray applet and auto-suspend on idle.
+  services.blueman-applet.enable = true;
+  services.swayidle.timeouts = [
+    {
+      timeout = 1800; # 30 min: suspend laptop
+      command = "systemctl suspend";
+    }
+  ];
+
   programs.zed-editor.package = pkgs.zed-editor; # settings come from modules/home/zed.nix
 
   # Ported from Windows %APPDATA%\yt-dlp\config (E:\ -> /data/). The cookies file is a login: it

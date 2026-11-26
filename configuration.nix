@@ -170,6 +170,10 @@
   programs.niri.package = pkgs.niri;
   programs.dconf.enable = true; # allows GTK apps to persist their settings
 
+  # GUI file manager (Mod+Shift+E) with trash, thumbnails, and removable-drive support
+  programs.thunar.enable = true;
+  programs.xfconf.enable = true;
+
   # ---------------------------------------------------------------------------
   # Security
   # ---------------------------------------------------------------------------
@@ -193,6 +197,9 @@
     };
 
     gnome.gnome-keyring.enable = true; # secret storage for GUI apps
+    udisks2.enable             = true; # removable drive / USB auto-mounting (udiskie, Thunar)
+    gvfs.enable                = true; # trash, MTP, network shares in Thunar
+    tumbler.enable             = true; # file thumbnails in Thunar
 
     dbus.enable       = true;  # IPC bus; required by most desktop services
     irqbalance.enable = true;  # distribute hardware interrupts across CPU cores

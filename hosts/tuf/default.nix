@@ -15,6 +15,7 @@ in
   services.power-profiles-daemon.enable = true; # asusd drives the platform profile through it
   services.upower.enable = true;                # battery status
   hardware.bluetooth.enable = true;             # Realtek Bluetooth (wifi: rtw89, in the kernel)
+  services.blueman.enable = true;               # Bluetooth tray applet & manager GUI
 
   # --- Hybrid graphics: Radeon 780M runs the desktop, RTX 4070 on demand (`nvidia-offload <app>`) ---
   services.xserver.videoDrivers = [ "nvidia" ]; # also selects the driver on Wayland
