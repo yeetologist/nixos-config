@@ -56,5 +56,6 @@ in
   services.nextdns = { enable = true; arguments = [ "-profile" "a3fc53" "-report-client-info" "-listen" "127.0.0.1:53" ]; };
   services.locate = { enable = true; package = pkgs.plocate; }; # `locate <name>` (Everything)
   programs.localsend.enable = true;             # also opens its firewall port
+  programs.nix-ld.enable = true;                # run prebuilt binaries from curl|bash installers (e.g. Warp agent CLI)
   programs.obs-studio.enable = true;
 }
