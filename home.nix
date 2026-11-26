@@ -28,6 +28,11 @@
   programs.home-manager.enable = true; # let HM manage itself
 
   dconf.settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
+  gtk = {
+    enable = true;
+    gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
+    gtk4.extraConfig.gtk-application-prefer-dark-theme = 1;
+  };
 
   # ---------------------------------------------------------------------------
   # User packages
@@ -47,7 +52,7 @@
     wl-clipboard       # wl-copy / wl-paste for Wayland
     playerctl          # MPRIS media control
     brightnessctl      # backlight control
-    pwvucontrol        # PipeWire volume mixer (per-app volume & device switching)
+    pavucontrol        # PipeWire/PulseAudio volume mixer (per-app volume & device switching)
 
     # Development
     gnupg

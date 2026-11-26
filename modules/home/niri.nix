@@ -28,8 +28,10 @@
 
     window-rules = [
       {
-        matches = [ { app-id = "^com\\.saivert\\.pwvucontrol$"; } ];
+        matches = [ { app-id = "^org\\.pulseaudio\\.pavucontrol$"; } ];
         open-floating = true;
+        default-column-width = { fixed = 760; };
+        default-window-height = { fixed = 540; };
       }
     ];
 
@@ -70,8 +72,8 @@
 
       # Audio controls (PipeWire / WirePlumber)
       "Mod+Ctrl+V" = {
-        hotkey-overlay.title = "Audio mixer (pwvucontrol)";
-        action.spawn-sh = "pkill -x pwvucontrol || pwvucontrol";
+        hotkey-overlay.title = "Audio mixer (pavucontrol)";
+        action.spawn-sh = "pkill -x pavucontrol || pavucontrol";
         repeat = false;
       };
       "XF86AudioRaiseVolume" = {
