@@ -23,7 +23,7 @@
     fzf ffmpeg imagemagick poppler-utils rclone _7zz rsync   # gh, nushell: shared modules
 
     # Global dev tools
-    uv ruff rustup nodejs bun opencode firebase-tools supabase-cli
+    uv ruff rustup nodejs bun opencode claude-code firebase-tools supabase-cli
   ];
 
   programs.zoxide.enable = true;                         # `z <dir>`, hooks into nushell
