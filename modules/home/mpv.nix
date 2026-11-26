@@ -68,7 +68,7 @@
       osd-bar-h         = 2;                  # bar height as % of screen height
       osd-bar-w         = 99;                 # bar width as % of screen width
       osd-duration      = 2000;               # hide OSD after 2 s
-      osd-status-msg    = "\${time-pos} / \${duration}\${?percent-pos:  (\${percent-pos}%)}\${?frame-drop-count:\${!frame-drop-count==0:  Dropped: \${frame-drop-count}}}\n\${?chapter:Chapter: \${chapter}}";
+      osd-status-msg    = "\${time-pos} / \${duration}\${?percent-pos:  (\${percent-pos}%)}\${?frame-drop-count:\${!frame-drop-count==0:  Dropped: \${frame-drop-count}}}\\n\${?chapter:Chapter: \${chapter}}";
 
       # PLAYBACK
       force-seekable            = "yes";  # force videos to be seekable
