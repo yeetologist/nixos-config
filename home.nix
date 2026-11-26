@@ -30,6 +30,11 @@
 
   programs.home-manager.enable = true; # let HM manage itself
 
+  programs.ghostty = {
+    enable = true;
+    settings.confirm-close-surface = false; # close immediately on Mod+Q without confirmation dialog
+  };
+
   dconf.settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
   gtk = {
     enable = true;
@@ -44,7 +49,6 @@
   home.packages = with pkgs; [
     # Browser & desktop
     brave
-    ghostty            # GPU-accelerated terminal
     papirus-icon-theme # app icons for Waybar taskbar and Rofi
     xwayland-satellite # XWayland for apps that don't support Wayland yet
     swaylock           # Wayland screen locker
