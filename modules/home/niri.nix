@@ -121,12 +121,11 @@
         action.spawn = [ "power-menu" ];
         repeat = false;
       };
-      "Mod+L" = {
-        hotkey-overlay.title = "Lock screen (Win+L)";
+      "Super+Alt+L" = {
+        hotkey-overlay.title = "Lock screen (Mod+Alt+L)";
         action.spawn = "swaylock";
         repeat = false;
       };
-      "Super+Alt+L".action.spawn = "swaylock";
 
       "Super+Alt+S" = {
         hotkey-overlay.title = "Toggle screen reader (Orca)";
@@ -221,65 +220,59 @@
         repeat = false;
       };
 
-      # Directional window focus
-      "Mod+Left"  = { hotkey-overlay.title = "Focus column left (or H)";  action.focus-column-left = [ ]; };
-      "Mod+Down"  = { hotkey-overlay.title = "Focus window down (or J)";  action.focus-window-down = [ ]; };
-      "Mod+Up"    = { hotkey-overlay.title = "Focus window up (or K)";    action.focus-window-up = [ ]; };
-      "Mod+Right" = { hotkey-overlay.title = "Focus column right"; action.focus-column-right = [ ]; };
-      "Mod+H".action.focus-column-left = [ ];
-      "Mod+J".action.focus-window-down = [ ];
-      "Mod+K".action.focus-window-up = [ ];
+      # Directional window / workspace focus (Vim HJKL primary, Arrows as aliases)
+      "Mod+H" = { hotkey-overlay.title = "Focus column left";               action.focus-column-left = [ ]; };
+      "Mod+J" = { hotkey-overlay.title = "Focus window or workspace down";  action.focus-window-or-workspace-down = [ ]; };
+      "Mod+K" = { hotkey-overlay.title = "Focus window or workspace up";    action.focus-window-or-workspace-up = [ ]; };
+      "Mod+L" = { hotkey-overlay.title = "Focus column right";              action.focus-column-right = [ ]; };
+      "Mod+Left".action.focus-column-left = [ ];
+      "Mod+Down".action.focus-window-or-workspace-down = [ ];
+      "Mod+Up".action.focus-window-or-workspace-up = [ ];
+      "Mod+Right".action.focus-column-right = [ ];
 
-      # Moving windows within workspace layout
-      "Mod+Ctrl+Left"  = { hotkey-overlay.title = "Move column left (or H)";  action.move-column-left = [ ]; };
-      "Mod+Ctrl+Down"  = { hotkey-overlay.title = "Move window down (or J)";  action.move-window-down = [ ]; };
-      "Mod+Ctrl+Up"    = { hotkey-overlay.title = "Move window up (or K)";    action.move-window-up = [ ]; };
-      "Mod+Ctrl+Right" = { hotkey-overlay.title = "Move column right (or L)"; action.move-column-right = [ ]; };
-      "Mod+Ctrl+H".action.move-column-left = [ ];
-      "Mod+Ctrl+J".action.move-window-down = [ ];
-      "Mod+Ctrl+K".action.move-window-up = [ ];
-      "Mod+Ctrl+L".action.move-column-right = [ ];
+      # Moving windows / columns (i3/Vim style: Mod+Shift+HJKL, Arrows as aliases)
+      "Mod+Shift+H" = { hotkey-overlay.title = "Move column left";                     action.move-column-left = [ ]; };
+      "Mod+Shift+J" = { hotkey-overlay.title = "Move window down / to workspace down"; action.move-window-down-or-to-workspace-down = [ ]; };
+      "Mod+Shift+K" = { hotkey-overlay.title = "Move window up / to workspace up";     action.move-window-up-or-to-workspace-up = [ ]; };
+      "Mod+Shift+L" = { hotkey-overlay.title = "Move column right";                    action.move-column-right = [ ]; };
+      "Mod+Shift+Left".action.move-column-left = [ ];
+      "Mod+Shift+Down".action.move-window-down-or-to-workspace-down = [ ];
+      "Mod+Shift+Up".action.move-window-up-or-to-workspace-up = [ ];
+      "Mod+Shift+Right".action.move-column-right = [ ];
 
       # Structural column boundaries
-      "Mod+Home"      = { hotkey-overlay.title = "Focus first column";   action.focus-column-first = [ ]; };
-      "Mod+End"       = { hotkey-overlay.title = "Focus last column";    action.focus-column-last = [ ]; };
-      "Mod+Ctrl+Home" = { hotkey-overlay.title = "Move column to first"; action.move-column-to-first = [ ]; };
-      "Mod+Ctrl+End"  = { hotkey-overlay.title = "Move column to last";  action.move-column-to-last = [ ]; };
+      "Mod+Home"       = { hotkey-overlay.title = "Focus first column";   action.focus-column-first = [ ]; };
+      "Mod+End"        = { hotkey-overlay.title = "Focus last column";    action.focus-column-last = [ ]; };
+      "Mod+Shift+Home" = { hotkey-overlay.title = "Move column to first"; action.move-column-to-first = [ ]; };
+      "Mod+Shift+End"  = { hotkey-overlay.title = "Move column to last";  action.move-column-to-last = [ ]; };
 
-      # Multi-Monitor navigation focus
-      "Mod+Shift+Left"  = { hotkey-overlay.title = "Focus monitor left (or H)";  action.focus-monitor-left = [ ]; };
-      "Mod+Shift+Down"  = { hotkey-overlay.title = "Focus monitor down (or J)";  action.focus-monitor-down = [ ]; };
-      "Mod+Shift+Up"    = { hotkey-overlay.title = "Focus monitor up (or K)";    action.focus-monitor-up = [ ]; };
-      "Mod+Shift+Right" = { hotkey-overlay.title = "Focus monitor right (or L)"; action.focus-monitor-right = [ ]; };
-      "Mod+Shift+H".action.focus-monitor-left = [ ];
-      "Mod+Shift+J".action.focus-monitor-down = [ ];
-      "Mod+Shift+K".action.focus-monitor-up = [ ];
-      "Mod+Shift+L".action.focus-monitor-right = [ ];
+      # Multi-Monitor navigation focus (Mod+Ctrl+HJKL, Arrows as aliases)
+      "Mod+Ctrl+H" = { hotkey-overlay.title = "Focus monitor left";  action.focus-monitor-left = [ ]; };
+      "Mod+Ctrl+J" = { hotkey-overlay.title = "Focus monitor down";  action.focus-monitor-down = [ ]; };
+      "Mod+Ctrl+K" = { hotkey-overlay.title = "Focus monitor up";    action.focus-monitor-up = [ ]; };
+      "Mod+Ctrl+L" = { hotkey-overlay.title = "Focus monitor right"; action.focus-monitor-right = [ ]; };
+      "Mod+Ctrl+Left".action.focus-monitor-left = [ ];
+      "Mod+Ctrl+Down".action.focus-monitor-down = [ ];
+      "Mod+Ctrl+Up".action.focus-monitor-up = [ ];
+      "Mod+Ctrl+Right".action.focus-monitor-right = [ ];
 
-      # Moving elements between physical displays
-      "Mod+Shift+Ctrl+Left"  = { hotkey-overlay.title = "Move column to monitor left (or H)";  action.move-column-to-monitor-left = [ ]; };
-      "Mod+Shift+Ctrl+Down"  = { hotkey-overlay.title = "Move column to monitor down (or J)";  action.move-column-to-monitor-down = [ ]; };
-      "Mod+Shift+Ctrl+Up"    = { hotkey-overlay.title = "Move column to monitor up (or K)";    action.move-column-to-monitor-up = [ ]; };
-      "Mod+Shift+Ctrl+Right" = { hotkey-overlay.title = "Move column to monitor right (or L)"; action.move-column-to-monitor-right = [ ]; };
-      "Mod+Shift+Ctrl+H".action.move-column-to-monitor-left = [ ];
-      "Mod+Shift+Ctrl+J".action.move-column-to-monitor-down = [ ];
-      "Mod+Shift+Ctrl+K".action.move-column-to-monitor-up = [ ];
-      "Mod+Shift+Ctrl+L".action.move-column-to-monitor-right = [ ];
+      # Moving columns between physical displays (Mod+Ctrl+Shift+HJKL, Arrows as aliases)
+      "Mod+Ctrl+Shift+H" = { hotkey-overlay.title = "Move column to monitor left";  action.move-column-to-monitor-left = [ ]; };
+      "Mod+Ctrl+Shift+J" = { hotkey-overlay.title = "Move column to monitor down";  action.move-column-to-monitor-down = [ ]; };
+      "Mod+Ctrl+Shift+K" = { hotkey-overlay.title = "Move column to monitor up";    action.move-column-to-monitor-up = [ ]; };
+      "Mod+Ctrl+Shift+L" = { hotkey-overlay.title = "Move column to monitor right"; action.move-column-to-monitor-right = [ ]; };
+      "Mod+Ctrl+Shift+Left".action.move-column-to-monitor-left = [ ];
+      "Mod+Ctrl+Shift+Down".action.move-column-to-monitor-down = [ ];
+      "Mod+Ctrl+Shift+Up".action.move-column-to-monitor-up = [ ];
+      "Mod+Ctrl+Shift+Right".action.move-column-to-monitor-right = [ ];
 
-      # Workspace linear movement
-      "Mod+Page_Down"       = { hotkey-overlay.title = "Focus workspace down (or U)";          action.focus-workspace-down = [ ]; };
-      "Mod+Page_Up"         = { hotkey-overlay.title = "Focus workspace up (or I)";            action.focus-workspace-up = [ ]; };
-      "Mod+U".action.focus-workspace-down = [ ];
-      "Mod+I".action.focus-workspace-up = [ ];
-      "Mod+Ctrl+Page_Down"  = { hotkey-overlay.title = "Move column to workspace down (or U)"; action.move-column-to-workspace-down = [ ]; };
-      "Mod+Ctrl+Page_Up"    = { hotkey-overlay.title = "Move column to workspace up (or I)";   action.move-column-to-workspace-up = [ ]; };
-      "Mod+Ctrl+U".action.move-column-to-workspace-down = [ ];
-      "Mod+Ctrl+I".action.move-column-to-workspace-up = [ ];
-
-      "Mod+Shift+Page_Down" = { hotkey-overlay.title = "Move workspace down (or U)";           action.move-workspace-down = [ ]; };
-      "Mod+Shift+Page_Up"   = { hotkey-overlay.title = "Move workspace up (or I)";             action.move-workspace-up = [ ]; };
-      "Mod+Shift+U".action.move-workspace-down = [ ];
-      "Mod+Shift+I".action.move-workspace-up = [ ];
+      # Pure workspace jumping & reordering
+      "Mod+Page_Down"       = { hotkey-overlay.title = "Focus workspace down";          action.focus-workspace-down = [ ]; };
+      "Mod+Page_Up"         = { hotkey-overlay.title = "Focus workspace up";            action.focus-workspace-up = [ ]; };
+      "Mod+Ctrl+Page_Down"  = { hotkey-overlay.title = "Move column to workspace down"; action.move-column-to-workspace-down = [ ]; };
+      "Mod+Ctrl+Page_Up"    = { hotkey-overlay.title = "Move column to workspace up";   action.move-column-to-workspace-up = [ ]; };
+      "Mod+Shift+Page_Down" = { hotkey-overlay.title = "Move workspace down";           action.move-workspace-down = [ ]; };
+      "Mod+Shift+Page_Up"   = { hotkey-overlay.title = "Move workspace up";             action.move-workspace-up = [ ]; };
 
       # Mouse Wheel / Touchpad integrations
       "Mod+WheelScrollDown" = {
