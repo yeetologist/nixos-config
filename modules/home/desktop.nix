@@ -104,7 +104,51 @@ in
     };
   };
 
-  # Tell XFCE/Thunar (`exo-open --launch TerminalEmulator`) to use Ghostty
+  # Override Loupe's desktop entry without DBusActivatable=true so Thunar/GLib
+  # launches `loupe %U` directly instead of failing D-Bus activation.
+  xdg.desktopEntries."org.gnome.Loupe" = {
+    name = "Image Viewer";
+    genericName = "Image Viewer";
+    exec = "loupe %U";
+    icon = "org.gnome.Loupe";
+    terminal = false;
+    type = "Application";
+    categories = [ "GNOME" "GTK" "Graphics" "Viewer" ];
+    mimeType = [
+      "image/png"
+      "image/jpeg"
+      "image/gif"
+      "image/webp"
+      "image/bmp"
+      "image/tiff"
+      "image/avif"
+      "image/svg+xml"
+    ];
+  };
+
+  # Thunar "Open Terminal Here" -> Ghostty directly (bypasses exo-open)
+  xdg.configFile."Thunar/uca.xml" = {
+    force = true;
+    text = ''
+      <?xml version="1.0" encoding="UTF-8"?>
+      <actions>
+      <action>
+        <icon>utilities-terminal</icon>
+        <name>Open Terminal Here</name>
+        <submenu></submenu>
+        <unique-id>1795682662787409-1</unique-id>
+        <command>ghostty --working-directory=%f</command>
+        <description>Open Ghostty in the current directory</description>
+        <range></range>
+        <patterns>*</patterns>
+        <startup-notify/>
+        <directories/>
+      </action>
+      </actions>
+    '';
+  };
+
+  # Also register Ghostty for any XFCE tool calling `exo-open --launch TerminalEmulator`
   xdg.configFile."xfce4/helpers.rc".text = ''
     TerminalEmulator=custom-TerminalEmulator
   '';
@@ -115,8 +159,9 @@ in
     Encoding=UTF-8
     Type=X-XFCE-Helper
     X-XFCE-Category=TerminalEmulator
-    X-XFCE-Commands=ghostty
-    X-XFCE-CommandsWithParameter=ghostty -e "%s"
+    X-XFCE-Binaries=ghostty;
+    X-XFCE-Commands=ghostty;
+    X-XFCE-CommandsWithParameter=ghostty -e "%s";
     Icon=com.mitchellh.ghostty
     Name=Ghostty
   '';
