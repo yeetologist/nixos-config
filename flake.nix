@@ -32,6 +32,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Google Antigravity 2.0 Base App + CLI (agy).
+    antigravity-nix = {
+      url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Yazi file manager flake (for latest builds + RAR override).
     # yazi = {
     #   url = "github:sxyazi/yazi";

@@ -1,6 +1,6 @@
 # Host tuf: user apps and tools (Home Manager). Shared config: ../../home.nix.
 # Toolchains per project (Go, Deno, Python versions, JDK, Dart, .NET, Playwright): a dev shell + direnv.
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 
 {
   home.packages = with pkgs; [
@@ -8,7 +8,9 @@
     firefox google-chrome
 
     # Dev apps
-    antigravity t3code jetbrains-toolbox android-studio android-tools github-desktop
+    inputs.antigravity-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
+    inputs.antigravity-nix.packages.${pkgs.stdenv.hostPlatform.system}.google-antigravity-cli
+    t3code jetbrains-toolbox android-studio android-tools github-desktop
 
     # Chat, media, reading
     vesktop ayugram-desktop calibre suwayomi-server   # zotero: nixpkgs builds it on EOL Firefox ESR 140 (insecure)
