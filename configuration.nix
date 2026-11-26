@@ -33,7 +33,7 @@
   # Networking
   # ---------------------------------------------------------------------------
   networking = {
-    hostName           = ""; # per machine: /etc/hostname, written by install.sh (hostnamectl to change)
+    hostName           = ""; # per machine: /etc/hostname (install.sh writes it; edit it as root to rename; hostnamectl cannot here)
     enableIPv6         = true;
     networkmanager.enable = true; # manage connections with nmcli / nmtui
 
