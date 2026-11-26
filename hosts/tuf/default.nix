@@ -1,5 +1,5 @@
 # Host tuf: ASUS TUF Gaming A15 FA507UI (Ryzen 9 8945H + Radeon 780M, RTX 4070 Laptop, 32 GB).
-# Install: docs/adding-a-device.md ("Install day: tuf").
+# Install: docs/install-tuf.md.
 { pkgs, user, ... }:
 
 {
