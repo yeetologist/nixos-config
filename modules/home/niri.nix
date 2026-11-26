@@ -20,7 +20,7 @@
       struts = {
         left   = 0; # no screen-edge padding
         right  = 0;
-        top    = 5;
+        top    = 0;
         bottom = 0;
       };
     };

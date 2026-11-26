@@ -35,6 +35,7 @@
     # Browser & desktop
     brave
     ghostty            # GPU-accelerated terminal
+    papirus-icon-theme # app icons for Waybar taskbar and Rofi
     xwayland-satellite # XWayland for apps that don't support Wayland yet
     swaylock           # Wayland screen locker
     orca               # screen reader
