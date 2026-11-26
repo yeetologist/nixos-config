@@ -11,7 +11,7 @@
     settings = {
       mainBar = {
         layer    = "top";
-        position = "bottom";
+        position = "top";
         height   = 40;
         spacing  = 2;
 
@@ -102,7 +102,7 @@
       window#waybar {
         background-color: rgba(26, 27, 38, 0.96);
         color: #c0caf5;
-        border-top: 1px solid #292e42;
+        border-bottom: 1px solid #292e42;
       }
 
       #custom-launcher {
