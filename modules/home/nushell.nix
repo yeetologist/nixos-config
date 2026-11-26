@@ -35,6 +35,7 @@
       jc  = "journalctl -r";
       ka  = "pkill";
       sdn = "sudo shutdown -h now";
+      bios = "systemctl reboot --firmware-setup"; # restart-into-bios on Windows
       smi = "sudo make install";
       pt  = "patch --merge -i";
       t   = "tldr";
