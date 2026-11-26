@@ -66,12 +66,13 @@
         };
 
         bluetooth = {
-          format           = "󰂯 {status}";
-          format-connected = "󰂱 {device_alias}";
-          format-disabled  = "";
-          format-off       = "";
-          tooltip-format   = "{controller_alias}\t{controller_address}\n{num_connections} connected";
-          on-click         = "blueman-manager";
+          format               = "󰂯 {status}";
+          format-connected     = "󰂱 {device_alias}";
+          format-disabled      = "";
+          format-off           = "";
+          format-no-controller = "";
+          tooltip-format       = "{controller_alias}\t{controller_address}\n{num_connections} connected";
+          on-click             = "blueman-manager";
         };
 
         pulseaudio = {

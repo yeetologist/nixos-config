@@ -123,7 +123,7 @@
       };
       "Mod+B" = {
         hotkey-overlay.title = "Toggle Waybar show / hide";
-        action.spawn-sh = "pkill -USR1 -x waybar || waybar";
+        action.spawn-sh = "pkill -USR1 -x .waybar-wrapped || pkill -USR1 -x waybar || waybar";
         repeat = false;
       };
       "Super+Alt+L" = {
