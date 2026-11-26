@@ -33,7 +33,7 @@
   # Networking
   # ---------------------------------------------------------------------------
   networking = {
-    hostName           = "nixos-btw";
+    hostName           = ""; # per machine: /etc/hostname, written by install.sh (hostnamectl to change)
     enableIPv6         = true;
     networkmanager.enable = true; # manage connections with nmcli / nmtui
 

@@ -40,6 +40,11 @@ if [ "$mode" = wipe ]; then
   [ "$root_gib" -ge 20 ] || die "only ${root_gib} GiB left for root; need >= 20"
 fi
 
+# --- Hostname (not in the flake, so clones don't clash; written to /etc/hostname) ---
+read -rp "Hostname [nixos-btw]: " host
+host=${host:-nixos-btw}
+[[ $host =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]] || die "hostname: lowercase letters, digits, '-'; max 63"
+
 # --- Password (typed twice: root is locked, a typo would lock you out) --------
 while :; do
   read -rsp "Password for bam: " p1; echo
@@ -53,6 +58,7 @@ unset p1 p2
 
 # --- Confirm ------------------------------------------------------------------
 echo
+echo "Host:  $host"
 echo "Disk:  $disk (${disk_gib} GiB)"
 if [ "$mode" = wipe ]; then
   echo "Mode:  WIPE ENTIRE DISK"
@@ -102,8 +108,9 @@ mount -o "subvol=@nix,$o" "$root" /mnt/nix
 mount -o umask=077 "$esp" /mnt/boot
 swapon "$swp"
 
-# --- Password file (configuration.nix reads it; mutableUsers = false) -------------
+# --- Hostname + password file (configuration.nix reads them; mutableUsers = false) --
 install -d -m 700 /mnt/etc/passwords
+printf '%s\n' "$host" > /mnt/etc/hostname
 ( umask 077; printf '%s\n' "$hash" > /mnt/etc/passwords/bam )
 
 # --- Install ------------------------------------------------------------------------
