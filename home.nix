@@ -1,6 +1,6 @@
 # Home Manager configuration for the primary user.
 # `user` is injected via extraSpecialArgs in flake.nix.
-{ pkgs, config, user, ... }:
+{ pkgs, config, user, host, ... }:
 
 {
   imports = [
@@ -26,7 +26,7 @@
 
   home.shellAliases = {
     # NixOS
-    up  = "sudo nixos-rebuild switch --refresh --flake github:yeetologist/nixos-config#nixos-btw";
+    up  = "sudo nixos-rebuild switch --refresh --flake github:yeetologist/nixos-config#${host}"; # this host
     btw = "echo 'I use NixOS, btw'";
     
     # Editor

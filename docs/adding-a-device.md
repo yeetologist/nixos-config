@@ -166,6 +166,67 @@ GitHub instead. From now on, the GitHub rebuild command below works for this hos
 
 ---
 
+## Install day: tuf
+
+`hosts/tuf/` already exists, for the ASUS TUF A15 FA507UI that currently runs Windows.
+NixOS replaces Windows on the **WD SN5000S** disk (Windows `C:` and `D:`). The **ADATA**
+disk (Windows `E:`) keeps its files and becomes `/data`.
+
+**In Windows, before wiping:**
+
+```powershell
+# admin PowerShell
+Set-Volume -DriveLetter E -NewFileSystemLabel data   # NixOS mounts /dev/disk/by-label/data
+powercfg /h off                                      # turns off Fast Startup, so E: closes cleanly
+```
+
+- Copy everything you need off `C:` and `D:`: they are wiped. `E:` survives.
+- Copy your secrets to `E:` (they never go in this public repo): `C:\Users\BAM\.ssh`,
+  `%APPDATA%\rclone\rclone.conf`.
+- Optional: copy Windows configs to `E:` for later porting: `.config\starship.toml`,
+  `%APPDATA%\nushell`, `%APPDATA%\Zed\settings.json`, `.gitconfig`,
+  `%APPDATA%\yazi\config`, the mpv `portable_config`.
+- Shut down normally (not restart), so `E:` is cleanly unmounted.
+
+**On the installer:** follow [Path C](#path-c-new-host-only-machine-install-from-a-local-clone),
+but `hosts/tuf/` already exists, so skip `add-host.sh` and regenerate only the drivers:
+
+```sh
+sudo -i
+nmtui
+nix-shell -p git
+git clone https://github.com/yeetologist/nixos-config -b main /tmp/nixos-config
+cd /tmp/nixos-config
+nixos-generate-config --show-hardware-config --no-filesystems > hosts/tuf/hardware-configuration.nix
+git add -A
+lsblk -o NAME,SIZE,MODEL,LABEL        # find the WD disk (SN5000S); the ADATA one shows LABEL "data"
+FLAKE=/tmp/nixos-config#tuf bash /tmp/nixos-config/install.sh
+```
+
+At the disk prompt, pick the **WD** disk, never the one labelled `data`. At the hostname prompt,
+type anything, e.g. `tuf`. Swap: keep the default 8.
+
+**After the first boot:**
+
+```sh
+ls /data                                             # the old E: drive
+cp -r /data/.ssh ~/.ssh && chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_*
+mkdir -p ~/.config/rclone && cp /data/rclone.conf ~/.config/rclone/
+sudo tailscale up                                    # log in to Tailscale
+asusctl -c 80                                        # battery charge limit
+nvidia-offload glxinfo -B | grep -i renderer         # should say RTX 4070 (nix-shell -p mesa-demos)
+```
+
+Then push the regenerated `hosts/tuf/hardware-configuration.nix` from `~/nixos-config`
+(see Path C, step C3). After that, `up` rebuilds this laptop from GitHub.
+
+Not in `hosts/tuf`:
+- **JDownloader 2:** not packaged in nixpkgs. Run its Linux installer from jdownloader.org.
+- **Zotero:** nixpkgs builds it on an end-of-life, insecure Firefox. Use the tarball
+  from zotero.org, or wait for nixpkgs to move it to a supported engine.
+
+---
+
 ## The install prompts
 
 `install.sh` asks, in order:
