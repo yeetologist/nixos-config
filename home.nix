@@ -1,6 +1,6 @@
 # Home Manager configuration for the primary user.
 # `user` is injected via extraSpecialArgs in flake.nix.
-{ pkgs, config, user, host, ... }:
+{ pkgs, config, inputs, user, host, ... }:
 
 {
   imports = [
@@ -65,6 +65,7 @@
     # Development
     gnupg
     nodejs
+    inputs.herdr-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
 
     # Shell utilities
     tmux

@@ -285,9 +285,11 @@
       # Binary caches — pre-built closures for community packages.
       substituters = [
         "https://nix-community.cachix.org"
+        "https://herdr.cachix.org"
       ];
       trusted-public-keys = [
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        "herdr.cachix.org-1:3nH7IStRsS0ASfdonA0DCRR2ZrSCeWitZ7Kwew0cR4I="
       ];
     };
   };

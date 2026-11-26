@@ -26,6 +26,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Herdr terminal workspace manager (official prebuilt release binaries).
+    herdr-nix = {
+      url = "github:herdrdev/herdr-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Yazi file manager flake (for latest builds + RAR override).
     # yazi = {
     #   url = "github:sxyazi/yazi";
@@ -62,7 +68,7 @@
         # nix-index DB (enables `nix-locate` and command-not-found hook).
         nix-index-database.nixosModules.nix-index
 
-        # Home Manager integrated into nixos-rebuild — no separate `hm switch`.
+        # Home Manager integrated into nixos-rebuild â€” no separate `hm switch`.
         home-manager.nixosModules.home-manager {
           home-manager = {
             useGlobalPkgs      = true;   # share system nixpkgs, no extra eval
@@ -70,7 +76,7 @@
             backupFileExtension = "backup";
             extraSpecialArgs   = {
               inherit inputs user host;
-              # yazi = inputs.yazi; 
+              # yazi = inputs.yazi;
             };
             users.${user}.imports = [ ./home.nix ];
           };
