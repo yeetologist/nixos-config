@@ -45,6 +45,7 @@
     wl-clipboard       # wl-copy / wl-paste for Wayland
     playerctl          # MPRIS media control
     brightnessctl      # backlight control
+    pwvucontrol        # PipeWire volume mixer (per-app volume & device switching)
 
     # Development
     gnupg

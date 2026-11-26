@@ -69,6 +69,7 @@
           format-muted     = "󰝟 Muted";
           format-icons     = { default = [ "󰕿" "󰖀" "󰕾" ]; };
           on-click         = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
+          on-click-right   = "pkill -x pwvucontrol || pwvucontrol";
           scroll-step      = 5;
         };
 

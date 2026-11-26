@@ -28,8 +28,10 @@
 
     window-rules = [
       {
-        # open-fullscreen = true;   # true = fullscreen, null = respect app preference
-        # { open-maximized = true; } # column fills available width, not exclusive fullscreen
+        matches = [ { app-id = "^com\\.saivert\\.pwvucontrol$"; } ];
+        open-floating = true;
+        default-column-width = { fixed = 640; };
+        default-window-height = { fixed = 520; };
       }
     ];
 
@@ -69,6 +71,11 @@
       };
 
       # Audio controls (PipeWire / WirePlumber)
+      "Mod+Ctrl+V" = {
+        hotkey-overlay.title = "Audio mixer (pwvucontrol)";
+        action.spawn-sh = "pkill -x pwvucontrol || pwvucontrol";
+        repeat = false;
+      };
       "XF86AudioRaiseVolume" = {
         hotkey-overlay.title = "Volume +10%";
         action.spawn-sh = "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+ -l 1.0";
