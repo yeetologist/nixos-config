@@ -74,7 +74,7 @@ Until it's pushed, rebuild with `sudo nixos-rebuild switch --flake ~/nixos-confi
 - **Mode**: only for a disk that already has this layout. `w` wipes everything; `k` keeps `/home` and reinstalls the system.
 - **Swap** in GiB: default is RAM, capped at 8.
 - **Hostname**: network name, unique per machine. Separate from the host folder name.
-- **Password** for `bam`: typed twice. Root has no password.
+- **Password** for the user named in `flake.nix` (`user`): typed twice. Root has no password.
 - **Confirmation**: type the disk name.
 
 **Rebuild** (after the host is on GitHub): `up`, which is short for
