@@ -66,10 +66,43 @@ in
     powerMenu
     clipboardMenu
     toggleNightLight
+    loupe    # Wayland image viewer (PNG/JPG/WebP/GIF/SVG/AVIF)
     rofimoji # emoji picker (Mod+.)
     wtype    # Wayland typing backend for rofimoji
     swaybg   # Wayland wallpaper daemon
   ];
+
+  # ---------------------------------------------------------------------------
+  # Default applications (XDG MIME associations)
+  # ---------------------------------------------------------------------------
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      "image/png"              = "org.gnome.Loupe.desktop";
+      "image/jpeg"             = "org.gnome.Loupe.desktop";
+      "image/gif"              = "org.gnome.Loupe.desktop";
+      "image/webp"             = "org.gnome.Loupe.desktop";
+      "image/bmp"              = "org.gnome.Loupe.desktop";
+      "image/tiff"             = "org.gnome.Loupe.desktop";
+      "image/avif"             = "org.gnome.Loupe.desktop";
+      "image/svg+xml"          = "org.gnome.Loupe.desktop";
+      "application/pdf"        = "org.pwmt.zathura.desktop";
+      "video/mp4"              = "mpv.desktop";
+      "video/x-matroska"       = "mpv.desktop";
+      "video/webm"             = "mpv.desktop";
+      "video/quicktime"        = "mpv.desktop";
+      "video/x-msvideo"        = "mpv.desktop";
+      "audio/mpeg"             = "mpv.desktop";
+      "audio/flac"             = "mpv.desktop";
+      "audio/ogg"              = "mpv.desktop";
+      "audio/wav"              = "mpv.desktop";
+      "audio/mp4"              = "mpv.desktop";
+      "inode/directory"        = "thunar.desktop";
+      "text/html"              = "brave-browser.desktop";
+      "x-scheme-handler/http"  = "brave-browser.desktop";
+      "x-scheme-handler/https" = "brave-browser.desktop";
+    };
+  };
 
   # ---------------------------------------------------------------------------
   # Notifications & Action Center (SwayNC — Mod+N)
