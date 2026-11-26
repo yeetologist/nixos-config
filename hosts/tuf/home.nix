@@ -18,12 +18,12 @@
     # Downloads, gaming, system UI
     qbittorrent lsfg-vk-ui opensnitch-ui
 
-    # CLI tools (ripgrep, file, yt-dlp, tmux, fastfetch are already shared)
+    # CLI tools (ripgrep, file, yt-dlp, fastfetch are already shared)
     eza bat fd jq yq-go sd dust ncdu procs hyperfine tokei difftastic duckdb xh
     fzf ffmpeg imagemagick poppler-utils rclone _7zz rsync   # gh, nushell: shared modules
 
-    # Global dev tools
-    uv ruff rustup nodejs bun opencode claude-code firebase-tools supabase-cli
+    # Global dev tools (nodejs is already shared in root home.nix)
+    uv ruff rustup bun opencode claude-code firebase-tools supabase-cli
   ];
 
   programs.zoxide.enable = true;                         # `z <dir>`, hooks into nushell

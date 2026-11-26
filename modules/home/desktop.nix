@@ -267,10 +267,9 @@ in
   };
 
   # ---------------------------------------------------------------------------
-  # Tray applets: Wi-Fi (nm-applet) & USB auto-mount (udiskie)
-  # Bluetooth (blueman-applet) is enabled in hosts/tuf/home.nix.
+  # Tray applets: USB auto-mount (udiskie)
+  # Wi-Fi is handled by Waybar (nmtui) & SwayNC; Bluetooth (blueman-applet) is in hosts/tuf/home.nix.
   # ---------------------------------------------------------------------------
-  services.network-manager-applet.enable = true;
   services.udiskie = {
     enable = true;
     tray = "auto"; # only appears in tray when a removable drive is mounted

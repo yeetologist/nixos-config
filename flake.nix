@@ -37,12 +37,6 @@
       url = "github:jacopone/antigravity-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # Yazi file manager flake (for latest builds + RAR override).
-    # yazi = {
-    #   url = "github:sxyazi/yazi";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
   };
 
   # ---------------------------------------------------------------------------
@@ -82,7 +76,6 @@
             backupFileExtension = "backup";
             extraSpecialArgs   = {
               inherit inputs user host;
-              # yazi = inputs.yazi;
             };
             users.${user}.imports = [ ./home.nix ];
           };

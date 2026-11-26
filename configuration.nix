@@ -43,30 +43,6 @@
     };
   };
 
-  # Local, validating DNS resolver with DNSSEC and DNS-over-TLS.
-  # services.unbound = {
-  #   enable = true;
-  #   settings = {
-  #     server = {
-  #       harden-glue            = true;
-  #       harden-dnssec-stripped = true;
-  #       use-caps-for-id        = false; # some servers break with 0x20 encoding
-  #       prefetch               = true;  # pre-fetch popular records
-  #       edns-buffer-size       = 1232;  # safe MTU for DNS-over-TLS
-  #       hide-identity          = true;  # don't leak hostname/version
-  #       hide-version           = true;
-  #     };
-  #     forward-zone = [{
-  #       name               = ".";
-  #       forward-addr       = [
-  #         "1.1.1.1#cloudflare-dns.com"
-  #         "1.0.0.1#cloudflare-dns.com"
-  #       ];
-  #       forward-tls-upstream = true;  # DNS-over-TLS to Cloudflare
-  #     }];
-  #   };
-  # };
-
   # ---------------------------------------------------------------------------
   # Localisation
   # ---------------------------------------------------------------------------
@@ -96,12 +72,8 @@
     ];
   };
 
-  # Root is locked; emergency/rescue shells open without a password (console-only VM).
+  # Root login is disabled; VM-only passwordless emergency shell lives in hosts/nixos-btw/default.nix.
   users.users.root.hashedPassword = "!";
-  boot.initrd.systemd.emergencyAccess = true;
-  # sulogin refuses a locked root unless forced.
-  systemd.services.emergency.environment.SYSTEMD_SULOGIN_FORCE = "1";
-  systemd.services.rescue.environment.SYSTEMD_SULOGIN_FORCE = "1";
 
 
   # ---------------------------------------------------------------------------
@@ -125,7 +97,6 @@
     FZF_DEFAULT_OPTS            = "--layout=reverse --height 40%";
     CARGO_HOME                  = "$HOME/.local/share/cargo";
     GOPATH                      = "$HOME/.local/share/go";
-    GNUPGHOME                   = "$HOME/.local/share/gnupg";
     NODE_REPL_HISTORY           = "$HOME/.local/share/node_repl_history";
     _JAVA_AWT_WM_NONREPARENTING = "1";
   };
@@ -137,13 +108,10 @@
   # System-level packages only — prefer home.packages for user tools.
   environment.systemPackages = with pkgs; [
     # Network
-    wget 
-
-    # Process management
-    killall moreutils
+    wget
 
     # System inspection
-    btop lm_sensors usbutils pciutils strace fastfetch
+    btop lm_sensors usbutils pciutils fastfetch
   ];
 
   # ---------------------------------------------------------------------------
@@ -220,10 +188,6 @@
     gvfs.enable                = true; # trash, MTP, network shares in Thunar
     tumbler.enable             = true; # file thumbnails in Thunar
 
-    dbus.enable       = true;  # IPC bus; required by most desktop services
-    irqbalance.enable = true;  # distribute hardware interrupts across CPU cores
-    fwupd.enable      = true;  # firmware updates via LVFS (https://fwupd.org)
-
     # btrfs health checks — scrubs read every block and verifies checksums.
     btrfs.autoScrub = {
       enable      = true;
@@ -244,7 +208,6 @@
   # Programs
   # ---------------------------------------------------------------------------
   programs = {
-    gnupg.agent.enable  = true;
     ssh.enableAskPassword = false; # don't pop up a GUI password dialog for SSH
 
     # nix-locate: search which package provides a given file path.

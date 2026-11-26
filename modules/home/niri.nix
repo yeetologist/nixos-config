@@ -139,12 +139,6 @@
         repeat = false;
       };
 
-      "Super+Alt+S" = {
-        hotkey-overlay.title = "Toggle screen reader (Orca)";
-        action.spawn-sh = "pkill orca || exec orca";
-        allow-when-locked = true;
-      };
-
       # Audio controls (PipeWire / WirePlumber)
       "Mod+Ctrl+V" = {
         hotkey-overlay.title = "Audio mixer (pavucontrol)";

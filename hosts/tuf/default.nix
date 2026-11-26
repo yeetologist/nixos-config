@@ -48,6 +48,7 @@ in
   hardware.graphics.extraPackages = [ pkgs.lsfg-vk ]; # Lossless Scaling frame gen; needs your Steam copy of Lossless Scaling
 
   # --- System services ----------------------------------------------------------------
+  services.fwupd.enable = true;                 # firmware updates via LVFS (https://fwupd.org)
   services.opensnitch.enable = true;            # per-app firewall prompts (simplewall); UI: opensnitch-ui
   services.tailscale.enable = true;             # `sudo tailscale up` once to log in
   services.locate = { enable = true; package = pkgs.plocate; }; # `locate <name>` (Everything)

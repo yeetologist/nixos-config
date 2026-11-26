@@ -10,6 +10,11 @@ in
 
   home-manager.users.${user}.imports = [ ./home.nix ];
 
+  # Console-only VM: allow passwordless emergency/rescue shells with locked root.
+  boot.initrd.systemd.emergencyAccess = true;
+  systemd.services.emergency.environment.SYSTEMD_SULOGIN_FORCE = "1";
+  systemd.services.rescue.environment.SYSTEMD_SULOGIN_FORCE = "1";
+
   virtualisation.vmware.guest = {
     enable = true;
     headless = false; # enable display/input guest additions (SVGA, drag-drop, etc.)

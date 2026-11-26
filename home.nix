@@ -51,10 +51,8 @@
   home.packages = with pkgs; [
     # Browser & desktop
     brave
-    papirus-icon-theme # app icons for Waybar taskbar and Rofi
     xwayland-satellite # XWayland for apps that don't support Wayland yet
     swaylock           # Wayland screen locker
-    orca               # screen reader
 
     # Clipboard & desktop controls
     wl-clipboard       # wl-copy / wl-paste for Wayland
@@ -63,14 +61,10 @@
     pavucontrol        # PipeWire/PulseAudio volume mixer (per-app volume & device switching)
 
     # Development
-    gnupg
     nodejs
     inputs.herdr-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
 
     # Shell utilities
-    tmux
-    nnn
-    highlight
     tldr
 
     # Media
