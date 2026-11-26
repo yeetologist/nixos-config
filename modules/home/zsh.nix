@@ -7,6 +7,13 @@
     autosuggestion.enable     = true;
     syntaxHighlighting.enable = true;
 
+    # Start niri after logging in on tty1 (like startx in the old .zprofile); other TTYs stay plain shells.
+    profileExtra = ''
+      if [ "$(tty)" = /dev/tty1 ] && [ -z "$WAYLAND_DISPLAY" ]; then
+        exec niri-session -l
+      fi
+    '';
+
     # -------------------------------------------------------------------------
     # Shell options  (setopt)
     # -------------------------------------------------------------------------
