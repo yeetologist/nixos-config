@@ -135,7 +135,7 @@
     killall moreutils
 
     # System inspection
-    htop lm_sensors usbutils pciutils strace fastfetch
+    btop lm_sensors usbutils pciutils strace fastfetch
   ];
 
   # ---------------------------------------------------------------------------
