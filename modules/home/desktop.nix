@@ -104,6 +104,23 @@ in
     };
   };
 
+  # Tell XFCE/Thunar (`exo-open --launch TerminalEmulator`) to use Ghostty
+  xdg.configFile."xfce4/helpers.rc".text = ''
+    TerminalEmulator=custom-TerminalEmulator
+  '';
+  xdg.dataFile."xfce4/helpers/custom-TerminalEmulator.desktop".text = ''
+    [Desktop Entry]
+    NoDisplay=true
+    Version=1.0
+    Encoding=UTF-8
+    Type=X-XFCE-Helper
+    X-XFCE-Category=TerminalEmulator
+    X-XFCE-Commands=ghostty
+    X-XFCE-CommandsWithParameter=ghostty -e "%s"
+    Icon=com.mitchellh.ghostty
+    Name=Ghostty
+  '';
+
   # ---------------------------------------------------------------------------
   # Notifications & Action Center (SwayNC — Mod+N)
   # ---------------------------------------------------------------------------
