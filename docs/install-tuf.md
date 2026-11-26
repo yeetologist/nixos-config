@@ -13,9 +13,16 @@ Set-Volume -DriveLetter E -NewFileSystemLabel data   # NixOS mounts it by this l
 powercfg /h off                                      # Fast Startup off, so E: closes cleanly
 ```
 
-**2. Back up anything you need from `C:` and `D:` to `E:`.** This includes:
-- **Secrets:** `C:\Users\BAM\.ssh` and `%APPDATA%\rclone\rclone.conf`. They never go in the public repo.
-- **Optional, for porting later:** `.config\starship.toml`, `%APPDATA%\nushell`, `%APPDATA%\Zed\settings.json`, `.gitconfig`, `%APPDATA%\yazi\config`, mpv's `portable_config`.
+**2. Back up to `E:`.** `C:` and `D:` are wiped. First, everything in `AppData\Roaming` (about 10 GB):
+game saves and `ludusavi-backup`, RenPy, mpv scripts and cookies, the yt-dlp plugin, Zed's private settings,
+`rclone.conf`. Then your SSH keys:
+
+```powershell
+robocopy "$env:APPDATA" E:\backup\AppData-Roaming /E /XJ /R:1 /W:1
+robocopy "$HOME\.ssh" E:\backup\.ssh /E
+```
+
+Copy anything else you need off `C:` and `D:` too. Secrets never go in the public repo.
 
 **3. Shut down** (not restart), then boot the NixOS installer USB.
 
@@ -40,12 +47,20 @@ At the prompts:
 ## 3. After the first boot
 
 ```sh
-cp -r /data/.ssh ~/ && chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_*
-mkdir -p ~/.config/rclone && cp /data/rclone.conf ~/.config/rclone/
+b=/data/backup/AppData-Roaming
+cp -r /data/backup/.ssh ~/ && chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_*
+mkdir -p ~/.config/rclone && cp $b/rclone/rclone.conf ~/.config/rclone/
+mkdir -p ~/.config/mpv ~/.config/yt-dlp && cp -r $b/mpv/scripts ~/.config/mpv/ && cp -r $b/yt-dlp/plugins ~/.config/yt-dlp/
+mkdir -p /data/ludusavi-backup && cp -rn $b/ludusavi-backup/. /data/ludusavi-backup/   # then restore saves in the ludusavi GUI
+gh auth login
 sudo tailscale up
 asusctl -c 80                                        # stop charging at 80%
 nix-shell -p mesa-demos --run 'nvidia-offload glxinfo -B' | grep -i renderer   # expect RTX 4070
 ```
+
+**Zed:** your preferences are already applied. Copy the private keys (`agent`, `language_models`,
+`edit_predictions`, `proxy`, `server_url`, `ssh_connections`) from `$b/Zed/settings.json` into
+Zed's settings (`Ctrl+,`).
 
 Then push the regenerated drivers (step 7 of [adding-a-device.md](adding-a-device.md)). After that, `up` rebuilds the laptop from GitHub.
 

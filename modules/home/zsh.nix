@@ -51,13 +51,7 @@
       plugins = [ "git" "sudo" ];
     };
 
-    plugins = [
-      {
-        name = "powerlevel10k";
-        src = pkgs.zsh-powerlevel10k;
-        file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
-      }
-    ];
+    # Prompt: starship (modules/home/starship.nix), same as on Windows.
 
     # -------------------------------------------------------------------------
     # Shell aliases
@@ -134,23 +128,8 @@
     mkdir -p "$HOME/.cache/zsh"
   '';
 
-  # Link the powerlevel10k configuration
-  home.file.".p10k.zsh".source = ./.p10k.zsh;
-
-  # Powerlevel10k instant prompt must be loaded at the very beginning of .zshrc
   programs.zsh.initContent = lib.mkMerge [
-    # Replaces initExtraFirst
-    (lib.mkBefore ''
-      # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-      if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
-        source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
-      fi
-    '')
-    # Replaces initExtra
     ''
-      # Source p10k config
-      [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-      
       # Greeting
       # fastfetch
 
@@ -190,6 +169,7 @@
              [[ ''${KEYMAP} = "" ]] || [[ $1 = 'beam' ]]; then
           echo -ne '\e[5 q'
         fi
+        zle reset-prompt # redraw so starship's vi-mode symbol updates
       }
       zle -N zle-keymap-select
 

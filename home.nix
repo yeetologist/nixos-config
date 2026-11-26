@@ -13,6 +13,10 @@
     ./modules/home/mpv.nix
     ./modules/home/yazi.nix
     ./modules/home/zsh.nix
+    ./modules/home/starship.nix
+    ./modules/home/nushell.nix
+    ./modules/home/gh.nix
+    ./modules/home/zed.nix
   ];
 
   # ---------------------------------------------------------------------------
