@@ -1,6 +1,9 @@
 # Host nixos-btw (VMware VM): everything that only makes sense inside the VM.
 # New machines: see docs/adding-a-device.md.
-{ pkgs, user, ... }:
+{ config, pkgs, user, ... }:
+let
+  owner = [ "uid=${toString config.users.users.${user}.uid}" "gid=${toString config.users.groups.users.gid}" ];
+in
 
 {
   imports = [ ../disk.nix ./hardware-configuration.nix ];
@@ -20,10 +23,8 @@
   fileSystems."/mnt/hgfs" = {
     device = ".host:/";
     fsType = "fuse.vmhgfs-fuse";
-    options = [
+    options = owner ++ [
       "allow_other"
-      "uid=1000"
-      "gid=100"
       "auto_unmount"
       "defaults"
       "nofail"  # don't block boot if VMware shared folders aren't available

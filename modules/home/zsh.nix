@@ -77,7 +77,7 @@
     NNN_TMPFILE    = "/tmp/.lastd";
     NNN_PREVIEWDIR = "$XDG_CACHE_HOME/nnn/previews";
     NNN_PLUG = builtins.concatStringsSep ";" [
-      "b:!realpath \"$nnn\">>/home/bam/.config/shell/shortcutrc*"
+      "b:!realpath \"$nnn\">>${config.home.homeDirectory}/.config/shell/shortcutrc*"
       "c:!code \"$nnn\"*"
       "n:!nvim -c VimwikiIndex"
       "v:!mpv \"$nnn\"*"

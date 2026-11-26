@@ -80,6 +80,8 @@ Until it's pushed, rebuild with `sudo nixos-rebuild switch --flake ~/nixos-confi
 **Rebuild** (after the host is on GitHub): `up`, which is short for
 `sudo nixos-rebuild switch --refresh --flake github:yeetologist/nixos-config#<this host>`.
 
+**User name, timezone:** set once in `flake.nix` (`user`, `timezone`); everything else, including `install.sh`, reads them from there.
+
 **Rename a machine:** `echo new-name | sudo tee /etc/hostname && sudo reboot` (`hostnamectl` can't write it on NixOS).
 
 **New hardware in the same machine:** regenerate its drivers from inside the repo:

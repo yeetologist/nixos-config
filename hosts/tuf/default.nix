@@ -1,6 +1,9 @@
 # Host tuf: ASUS TUF Gaming A15 FA507UI (Ryzen 9 8945H + Radeon 780M, RTX 4070 Laptop, 32 GB).
 # Install: docs/install-tuf.md.
-{ pkgs, user, ... }:
+{ config, pkgs, user, ... }:
+let
+  owner = [ "uid=${toString config.users.users.${user}.uid}" "gid=${toString config.users.groups.users.gid}" ];
+in
 
 {
   imports = [ ../disk.nix ./hardware-configuration.nix ];
@@ -34,7 +37,7 @@
   fileSystems."/data" = {
     device = "/dev/disk/by-label/data";
     fsType = "ntfs3";
-    options = [ "uid=1000" "gid=100" "umask=022" "nofail" "x-systemd.device-timeout=5s" ];
+    options = owner ++ [ "umask=022" "nofail" "x-systemd.device-timeout=5s" ];
   };
 
   # --- Gaming -----------------------------------------------------------------------

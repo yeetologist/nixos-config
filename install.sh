@@ -48,6 +48,12 @@ if [ "$mode" = wipe ]; then
   [ "$root_gib" -ge 20 ] || die "only ${root_gib} GiB left for root; need >= 20"
 fi
 
+# --- User name: read from the flake (flake.nix `user`), not hardcoded here ------------
+[[ $flake == *#* ]] || die "FLAKE must look like <flake>#<host>"
+echo "Evaluating $flake ..."
+user=$(nix --extra-experimental-features 'nix-command flakes' eval --raw   "${flake%%#*}#nixosConfigurations.${flake#*#}.config.home-manager.users"   --apply 'u: builtins.head (builtins.attrNames u)') || die "can't evaluate $flake"
+[[ $user =~ ^[a-z_][a-z0-9_-]*$ ]] || die "unexpected user name from flake: $user"
+
 # --- Hostname (not in the flake, so clones don't clash; written to /etc/hostname) ---
 read -rp "Hostname [nixos-btw]: " host
 host=${host:-nixos-btw}
@@ -55,7 +61,7 @@ host=${host:-nixos-btw}
 
 # --- Password (typed twice: root is locked, a typo would lock you out) --------
 while :; do
-  read -rsp "Password for bam: " p1; echo
+  read -rsp "Password for $user: " p1; echo
   read -rsp "Again: " p2; echo
   [ -n "$p1" ] && [ "$p1" = "$p2" ] && break
   echo "Empty or mismatched, try again."
@@ -119,17 +125,17 @@ swapon "$swp"
 # --- Hostname + password file (configuration.nix reads them; mutableUsers = false) --
 install -d -m 700 /mnt/etc/passwords
 printf '%s\n' "$host" > /mnt/etc/hostname
-( umask 077; printf '%s\n' "$hash" > /mnt/etc/passwords/bam )
+( umask 077; printf '%s\n' "$hash" > "/mnt/etc/passwords/$user" )
 
 # --- Install ------------------------------------------------------------------------
 nixos-install --flake "$flake" --no-root-passwd --option experimental-features 'nix-command flakes'
 
 # Local flake: keep the clone (it lives in the ISO's RAM otherwise). Never overwrite an existing one.
 if [ -d "$src" ]; then
-  dest=/mnt/home/bam/nixos-config
+  dest=/mnt/home/$user/nixos-config
   [ -e "$dest" ] && dest=$dest.install-$(date +%Y%m%d%H%M%S)
   cp -a "$src" "$dest"
-  chown -R "$(awk -F: '$1 == "bam" { print $3 ":" $4 }' /mnt/etc/passwd)" "$dest"
+  chown -R "$(awk -F: -v u="$user" '$1 == u { print $3 ":" $4 }' /mnt/etc/passwd)" "$dest"
   echo "Config copied to ${dest#/mnt}"
 fi
 echo "Done. Reboot when ready."

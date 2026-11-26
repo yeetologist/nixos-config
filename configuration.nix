@@ -82,6 +82,7 @@
 
   users.users.${user} = {
     isNormalUser       = true;
+    uid                = 1000; # pinned: mounts in hosts/ take ownership from it
     hashedPasswordFile = "/etc/passwords/${user}";
     extraGroups  = [
       "wheel"          # sudo access
