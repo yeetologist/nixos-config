@@ -68,9 +68,9 @@
     ];
 
     binds = {
-      # Hotkey help overlay
-      "Mod+Shift+Slash" = {
-        hotkey-overlay.title = "Show hotkey overlay";
+      # Hotkey help overlay (custom 3-column cheatsheet is bound in modules/home/hotkey-overlay.nix)
+      "Mod+Ctrl+Shift+Slash" = {
+        hotkey-overlay.title = "Show built-in Niri hotkey overlay";
         action.show-hotkey-overlay = [ ];
       };
 

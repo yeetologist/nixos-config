@@ -8,6 +8,7 @@
     ./modules/home/desktop.nix
     ./modules/home/display-menu.nix
     ./modules/home/git.nix
+    ./modules/home/hotkey-overlay.nix
     ./modules/home/niri.nix
     ./modules/home/nvim.nix
     ./modules/home/rofi.nix
