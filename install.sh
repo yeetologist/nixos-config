@@ -1,53 +1,111 @@
 #!/usr/bin/env bash
-# Fresh install of nixos-btw from the NixOS installer ISO. WIPES THE DISK.
-#   sudo bash <(curl -sL https://raw.githubusercontent.com/yeetologist/nixos-config/main/install.sh) /dev/sda
-# hardware-configuration.nix mounts by label, so no clone or regenerated hardware config is needed.
+# Install nixos-btw from the NixOS installer ISO (as root):
+#   bash <(curl -sL https://raw.githubusercontent.com/yeetologist/nixos-config/main/install.sh)
+# Modes: wipe the whole disk, or reinstall keeping /home (@home and its snapshots survive).
+# Layout must match hardware-configuration.nix: labels BOOT/swap/nixos, subvolumes @ @home @nix.
 set -euo pipefail
 
-disk=${1:?usage: install.sh /dev/sdX}
 flake=${FLAKE:-github:yeetologist/nixos-config#nixos-btw}
-[ -b "$disk" ] || { echo "$disk is not a block device" >&2; exit 1; }
-[ "$(id -u)" = 0 ] || { echo "run as root" >&2; exit 1; }
+die() { echo "error: $*" >&2; exit 1; }
+[ "$(id -u)" = 0 ] || die "run as root"
 
-lsblk "$disk"
-read -rp "ERASE everything on $disk? type yes: " ok </dev/tty
-[ "$ok" = yes ] || exit 1
+# --- Disk -------------------------------------------------------------------
+echo "Disks:"
+lsblk -dpno NAME,SIZE,MODEL -e 7,11
+default_disk=$(lsblk -dpno NAME -e 7,11 | head -1)
+read -rp "Install to [$default_disk]: " disk
+disk=${disk:-$default_disk}
+[ -b "$disk" ] || die "$disk is not a block device"
+disk_gib=$(( $(lsblk -bdno SIZE "$disk") / 1024**3 ))
 
-# 1. Partition (GPT: 1 GiB ESP, 4 GiB swap, rest btrfs). Partlabels avoid sda1 vs nvme0n1p1.
-parted -s "$disk" -- mklabel gpt \
-  mkpart ESP fat32 1MiB 1GiB set 1 esp on \
-  mkpart swap linux-swap 1GiB 5GiB \
-  mkpart root btrfs 5GiB 100%
-udevadm settle
-p=/dev/disk/by-partlabel
-mkfs.fat -F32 -n BOOT "$p/ESP"
-mkswap -L swap "$p/swap"
-mkfs.btrfs -f -L nixos "$p/root"
-udevadm settle
+# Partition of $disk with the given GPT partlabel (not global by-partlabel: other disks may share it).
+part() { lsblk -lnpo NAME,PARTLABEL "$disk" | awk -v l="$1" '$2 == l { print $1 }'; }
 
-# 2. btrfs subvolumes @ @home @nix, plus @home/.snapshots for snapper.
-mount "$p/root" /mnt
-btrfs subvolume create /mnt/@ /mnt/@home /mnt/@nix
-btrfs subvolume create /mnt/@home/.snapshots
-umount /mnt
-o=compress=zstd:1,noatime
-mount -o "subvol=@,$o" "$p/root" /mnt
-mkdir -p /mnt/{home,nix,boot}
-mount -o "subvol=@home,$o" "$p/root" /mnt/home
-mount -o "subvol=@nix,$o" "$p/root" /mnt/nix
-mount -o umask=077 "$p/ESP" /mnt/boot
-swapon "$p/swap"
+# --- Mode -------------------------------------------------------------------
+mode=wipe
+if [ -n "$(part root)" ] && [ -n "$(part ESP)" ] && [ -n "$(part swap)" ]; then
+  echo "$disk already has a nixos-btw layout."
+  read -rp "[w]ipe everything, or [k]eep /home and reinstall the system? [w/k]: " m
+  case $m in k|K) mode=keep-home ;; w|W) ;; *) die "choose w or k" ;; esac
+fi
 
-# 3. Password for bam (configuration.nix reads /etc/passwords/bam; mutableUsers = false).
-mkdir -p /mnt/etc/passwords
-hash=""
-while [ -z "$hash" ]; do
-  hash=$(mkpasswd -m sha-512 </dev/tty) || hash=""
+# --- Swap size (wipe only; keep-home reuses the existing partition) -----------
+if [ "$mode" = wipe ]; then
+  ram_gib=$(( ($(awk '/MemTotal/ { print $2 }' /proc/meminfo) + 1024**2 - 1) / 1024**2 ))
+  swap_default=$(( ram_gib > 8 ? 8 : ram_gib ))
+  read -rp "Swap GiB (disk is ${disk_gib} GiB, RAM ${ram_gib} GiB) [$swap_default]: " swap_gib
+  swap_gib=${swap_gib:-$swap_default}
+  [[ $swap_gib =~ ^[0-9]+$ ]] && [ "$swap_gib" -ge 1 ] || die "swap must be a whole number >= 1"
+  root_gib=$(( disk_gib - 1 - swap_gib ))
+  [ "$root_gib" -ge 20 ] || die "only ${root_gib} GiB left for root; need >= 20"
+fi
+
+# --- Password (typed twice: root is locked, a typo would lock you out) --------
+while :; do
+  read -rsp "Password for bam: " p1; echo
+  read -rsp "Again: " p2; echo
+  [ -n "$p1" ] && [ "$p1" = "$p2" ] && break
+  echo "Empty or mismatched, try again."
 done
-printf '%s\n' "$hash" > /mnt/etc/passwords/bam
-chmod 600 /mnt/etc/passwords/bam
+if command -v mkpasswd >/dev/null; then hash=$(printf '%s' "$p1" | mkpasswd -m sha-512 -s)
+else hash=$(printf '%s' "$p1" | openssl passwd -6 -stdin); fi
+unset p1 p2
 
-# 4. Install straight from GitHub. Root stays locked (hashedPassword = "!").
+# --- Confirm ------------------------------------------------------------------
+echo
+echo "Disk:  $disk (${disk_gib} GiB)"
+if [ "$mode" = wipe ]; then
+  echo "Mode:  WIPE ENTIRE DISK"
+  echo "Parts: 1 GiB boot, ${swap_gib} GiB swap, ~${root_gib} GiB btrfs (@ @home @nix)"
+else
+  echo "Mode:  keep /home: recreate boot, @ and @nix; @home is left untouched"
+fi
+echo "Flake: $flake"
+read -rp "Type the disk name ($disk) to continue: " ok
+[ "$ok" = "$disk" ] || die "aborted"
+
+# --- Partition / format ---------------------------------------------------------
+swapoff -a 2>/dev/null || true
+umount -R /mnt 2>/dev/null || true
+if [ "$mode" = wipe ]; then
+  wipefs -af "$disk"
+  parted -s "$disk" -- mklabel gpt \
+    mkpart ESP fat32 1MiB 1GiB set 1 esp on \
+    mkpart swap linux-swap 1GiB "$(( 1 + swap_gib ))GiB" \
+    mkpart root btrfs "$(( 1 + swap_gib ))GiB" 100%
+  udevadm settle
+  mkswap -L swap "$(part swap)"
+  mkfs.btrfs -f -L nixos "$(part root)"
+fi
+mkfs.fat -F32 -n BOOT "$(part ESP)" # always fresh: old generations' boot entries would point at deleted @
+udevadm settle
+esp=$(part ESP) swp=$(part swap) root=$(part root)
+
+# --- Subvolumes ------------------------------------------------------------------
+mount "$root" /mnt
+if [ "$mode" = keep-home ]; then
+  [ -d /mnt/@home ] || die "no @home subvolume on $root"
+  for sv in @ @nix; do
+    [ -d "/mnt/$sv" ] && btrfs subvolume delete -R "/mnt/$sv"
+  done
+fi
+btrfs subvolume create /mnt/@ /mnt/@nix
+[ -d /mnt/@home ] || btrfs subvolume create /mnt/@home
+[ -d /mnt/@home/.snapshots ] || btrfs subvolume create /mnt/@home/.snapshots
+umount /mnt
+
+o=compress=zstd:1,noatime
+mount -o "subvol=@,$o" "$root" /mnt
+mkdir -p /mnt/{home,nix,boot}
+mount -o "subvol=@home,$o" "$root" /mnt/home
+mount -o "subvol=@nix,$o" "$root" /mnt/nix
+mount -o umask=077 "$esp" /mnt/boot
+swapon "$swp"
+
+# --- Password file (configuration.nix reads it; mutableUsers = false) -------------
+install -d -m 700 /mnt/etc/passwords
+( umask 077; printf '%s\n' "$hash" > /mnt/etc/passwords/bam )
+
+# --- Install ------------------------------------------------------------------------
 nixos-install --flake "$flake" --no-root-passwd --option experimental-features 'nix-command flakes'
-
 echo "Done. Reboot when ready."
