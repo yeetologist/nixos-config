@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Install nixos-btw from the NixOS installer ISO (as root):
 #   bash <(curl -sL https://raw.githubusercontent.com/yeetologist/nixos-config/main/install.sh)
+# From a local clone (new host not pushed yet), copied to ~/nixos-config on the new system:
+#   FLAKE=/tmp/nixos-config#laptop bash /tmp/nixos-config/install.sh
 # Modes: wipe the whole disk, or reinstall keeping /home (@home and its snapshots survive).
 # Layout must match hosts/vm/hardware-configuration.nix: labels BOOT/swap/nixos, subvolumes @ @home @nix.
 set -euo pipefail
@@ -8,6 +10,12 @@ set -euo pipefail
 flake=${FLAKE:-github:yeetologist/nixos-config#nixos-btw}
 die() { echo "error: $*" >&2; exit 1; }
 [ "$(id -u)" = 0 ] || die "run as root"
+src=${flake%%#*}
+if [ -d "$src" ]; then # local flake: only git-tracked (or staged) files are visible to it
+  git -C "$src" rev-parse --git-dir >/dev/null 2>&1 || die "$src is not a git repo"
+  [ -z "$(git -C "$src" ls-files --others --exclude-standard)" ] || die "untracked files in $src; run: git -C $src add -A"
+  src=$(realpath "$src")
+fi
 
 # --- Disk -------------------------------------------------------------------
 echo "Disks:"
@@ -115,4 +123,13 @@ printf '%s\n' "$host" > /mnt/etc/hostname
 
 # --- Install ------------------------------------------------------------------------
 nixos-install --flake "$flake" --no-root-passwd --option experimental-features 'nix-command flakes'
+
+# Local flake: keep the clone (it lives in the ISO's RAM otherwise). Never overwrite an existing one.
+if [ -d "$src" ]; then
+  dest=/mnt/home/bam/nixos-config
+  [ -e "$dest" ] && dest=$dest.install-$(date +%Y%m%d%H%M%S)
+  cp -a "$src" "$dest"
+  chown -R "$(awk -F: '$1 == "bam" { print $3 ":" $4 }' /mnt/etc/passwd)" "$dest"
+  echo "Config copied to ${dest#/mnt}"
+fi
 echo "Done. Reboot when ready."

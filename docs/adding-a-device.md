@@ -90,7 +90,7 @@ Leave out everything from `hosts/vm/`. Those settings (VMware guest tools, vmblo
   };
 ```
 
-Commit and push to `main`. Machines install and rebuild from GitHub, not from your local copy.
+Commit and push to `main`: the install and rebuild commands below fetch from GitHub, not your local copy. Only machine and nowhere to push from? See [installing from a local clone](#only-one-machine-install-from-a-local-clone-push-later).
 
 ## 4. Install
 
@@ -111,6 +111,37 @@ Leave out `FLAKE=…` to install the default host, `nixos-btw` (the VM). The scr
 6. **Confirmation**: type the disk name.
 
 Reboot. Log in on tty1 and niri starts automatically.
+
+### Only one machine: install from a local clone, push later
+
+If the new machine is your only one, you can't easily push the new host from
+somewhere else first. Do steps 1–3 on the ISO itself and install from the clone:
+
+```sh
+nix-shell -p git                       # if the ISO has no git
+git clone https://github.com/yeetologist/nixos-config -b main /tmp/nixos-config
+cd /tmp/nixos-config
+nixos-generate-config --show-hardware-config --no-filesystems   # step 1, paste into hosts/laptop/
+#   ... create hosts/laptop/ and the flake entry (steps 2-3) with nano/vim ...
+git add -A                             # required: a flake can't see untracked files
+FLAKE=/tmp/nixos-config#laptop bash /tmp/nixos-config/install.sh
+```
+
+No commit or GitHub login is needed for this. `git add` is enough, and the script
+refuses to start if anything is still untracked. After installing, it copies the clone
+to `~/nixos-config` on the new system, because `/tmp` on the ISO is lost at reboot.
+If `~/nixos-config` already exists (keep-home reinstall), it copies to
+`~/nixos-config.install-<date>` instead.
+
+After the first boot, rebuild from that folder until you push:
+
+```sh
+sudo nixos-rebuild switch --flake ~/nixos-config#laptop
+```
+
+When you're ready, log in to GitHub (`gh auth login` or an SSH key), then
+`git commit` and `git push` from `~/nixos-config`. From then on, the GitHub commands
+in this doc work for this host too.
 
 ## 5. Day to day
 
