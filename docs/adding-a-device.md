@@ -225,6 +225,98 @@ Settings for your user on just this host go in `hosts/<name>/home.nix`. Use
 Don't copy anything from `hosts/nixos-btw/`. VMware guest tools, shared folders and the
 clipboard sync only work inside VMware.
 
+### Example: ASUS TUF Gaming A15 FA507UI
+
+This is the current laptop: AMD Ryzen with a Radeon iGPU, an NVIDIA RTX 4070 Laptop GPU,
+Realtek wifi, Bluetooth and audio. nixos-hardware has no FA507UI module. The settings below
+follow its sister models (`asus/fa507nv`, `asus/fa507rm`). Every option was checked
+against this repo's pinned nixpkgs.
+
+**1. Get the GPU bus IDs.** Run this on the laptop, from the installer or an installed system.
+It prints each GPU with its ID already in the decimal form Nix wants (`lspci` shows hex):
+
+```sh
+nix-shell -p pciutils --run 'for d in $(lspci -D | awk "/VGA|3D|Display/ {print \$1}"); do IFS=":." read -r _ b s f <<<"$d"; printf "%-45s PCI:%d:%d:%d\n" "$(lspci -s "$d" | cut -d" " -f2-)" "$((16#$b))" "$((16#$s))" "$((16#$f))"; done'
+```
+
+Expect two lines, an `NVIDIA … AD106M` (often `PCI:1:0:0`) and an `AMD/ATI … Radeon`
+(e.g. `PCI:101:0:0`). Use the IDs your laptop prints, not these.
+
+**2. `hosts/laptop/default.nix`** (after `bash add-host.sh laptop`, replace the generated body):
+
+```nix
+# Host laptop: ASUS TUF Gaming A15 FA507UI (Ryzen + Radeon iGPU, RTX 4070 Laptop).
+{ config, pkgs, user, ... }:
+
+{
+  imports = [ ../disk.nix ./hardware-configuration.nix ];
+
+  # ASUS: fan/performance profiles, keyboard backlight, battery charge limit (replaces Armoury Crate).
+  services.asusd.enable = true;
+  services.power-profiles-daemon.enable = true; # asusd drives the platform profile through it
+  services.upower.enable = true;                # battery status for waybar
+
+  # Wifi (Realtek rtw89) and AMD microcode load from firmware that configuration.nix already enables.
+  hardware.bluetooth.enable = true;             # Realtek Bluetooth
+
+  # NVIDIA RTX 4070 + Radeon iGPU (hybrid "PRIME offload"): the iGPU runs the desktop,
+  # the NVIDIA GPU sleeps until an app asks for it with `nvidia-offload <app>`.
+  services.xserver.videoDrivers = [ "nvidia" ]; # also selects the driver on Wayland
+  hardware.nvidia = {
+    open = true;                                # open kernel module: recommended for RTX 20xx and newer
+    modesetting.enable = true;
+    powerManagement.enable = true;              # save VRAM across suspend
+    powerManagement.finegrained = true;         # power the dGPU fully off when idle (needs offload)
+    dynamicBoost.enable = true;                 # shift power CPU<->GPU under load (Windows: nvpcf)
+    prime = {
+      offload.enable = true;
+      offload.enableOffloadCmd = true;          # adds the `nvidia-offload` command
+      amdgpuBusId = "PCI:101:0:0";              # from step 1 (AMD line)
+      nvidiaBusId = "PCI:1:0:0";                # from step 1 (NVIDIA line)
+    };
+  };
+}
+```
+
+**3. After the first boot:**
+
+```sh
+asusctl profile -P Quiet                      # or Balanced / Performance (Fn+F5 cycles too)
+asusctl -c 80                                 # stop charging at 80% to spare the battery
+nvidia-offload glxinfo -B | grep -i renderer  # should name the RTX 4070 (nix-shell -p mesa-demos)
+nvidia-smi                                    # GPU status; "No devices" while idle is normal with finegrained
+```
+
+**How the Windows drivers in the backup map to NixOS:**
+
+| Windows driver(s) | What it is | On NixOS |
+|---|---|---|
+| `fa507ui_*`, `armourycratecontrolinterface`, `asuskeyboardfilter`, `asussci2`, `asusvirtualdevice` | ASUS model, fan and keyboard control | `services.asusd` (asusctl) |
+| `nvamsi`, `nvhda`, `nvpcf` | NVIDIA driver, HDMI audio, Dynamic Boost | `hardware.nvidia.*` above (`nvpcf` = `dynamicBoost`) |
+| `amdwin-*`, `amdocl`, `amdogl`, `amdvlk`, `atihdwt6` | Radeon iGPU graphics and HDMI audio | in the kernel/Mesa (`amdgpu`), nothing to set |
+| `amdpmf`, `amdmicropep`, `amdppkg`, `amdpsp`, `amdgpio2`, `amdi2c`, `amdpcibridgeextension` | AMD power, platform and chipset | in the kernel (`amd_pmf`, `amd-pstate`); `power-profiles-daemon` above |
+| `amdacp*`, `amdsdw*`, `amdafd`, `amdsafd`, `hdxacpasus` | AMD audio coprocessor (built-in microphones) | in the kernel (SOF/ACP), works through PipeWire |
+| `rt68cx21x64`, `realtek*`, `hdx_asusext_*` | Realtek audio and ASUS speaker tuning | in the kernel; tuning profiles have no Linux version (EasyEffects can approximate them) |
+| `dax3_*` | Dolby Atmos | no Linux driver |
+| `netrtwlane601` | Realtek wifi | in the kernel (`rtw89`) + firmware, already enabled |
+| `rtkbtfilter` | Realtek Bluetooth | `hardware.bluetooth.enable` |
+| `asusptpfilter` | precision touchpad | in the kernel (`i2c-hid`); niri configures tapping etc. |
+| `mep_camera_component`, `usbvideo_ext` | webcam | in the kernel (`uvcvideo`) |
+| `kipudrv` | AMD NPU (Ryzen AI) | in the kernel (`amdxdna`); nothing on Linux uses it by default |
+| `rcbottom`, `rccfg`, `rcraid` | AMD RAID | not needed. If the installer sees no disk, set the BIOS storage mode to AHCI/NVMe instead of RAID |
+| `wireguard`, `wintun`, `ovpn-dco`, `wiresock` | VPN clients | not drivers on Linux; add `networking.wireguard` or OpenVPN if wanted |
+| `vmci`, `vmusb` | VMware Workstation (host side) | only if you install VMware on Linux: `virtualisation.vmware.host.enable = true;` |
+| `hidhide`, `vigembus` | game controller emulation | not needed; controllers work natively |
+| `ss*`, `secu*`, `ssud*`, `c7xxphone`, `ccdcmb*`, `mbtmdm`, `via_usb_*`, `flashusb`, `pawnio`, `prn*`, `pr*drv`, `piecomponent`, `microsofteffectpack`, `netadapter`, `netbridge`, `ndiswgc_lwf` | phone, USB modem, flashing tools, printers, Windows-only components | not needed |
+
+If something misbehaves on this model, try these:
+- **Black screen or a flickering internal display:** try `hardware.nvidia.open = false;`.
+- **No display at all on the NVIDIA GPU:** try `services.supergfxd.enable = true;` with
+  `supergfxctl -m Hybrid`.
+- **Kernel too new for the NVIDIA driver:** `configuration.nix` uses the latest kernel. If
+  the NVIDIA module fails to build, pin this host to
+  `boot.kernelPackages = pkgs.linuxPackages;`.
+
 ## Gotchas
 
 - **Untracked files are invisible**: a flake only sees files git knows about. After
