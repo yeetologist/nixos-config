@@ -115,11 +115,19 @@
 
   # Use $HOME (not ${HOME}) so pam_env can rewrite it to @{HOME} for early PAM.
   environment.sessionVariables = {
-    XDG_CACHE_HOME = "$HOME/.cache";
-    XDG_CONFIG_HOME = "$HOME/.config";
-    XDG_BIN_HOME   = "$HOME/.local/bin";
-    XDG_DATA_HOME  = "$HOME/.local/share";
-    XDG_STATE_HOME = "$HOME/.local/state";
+    XDG_CACHE_HOME              = "$HOME/.cache";
+    XDG_CONFIG_HOME             = "$HOME/.config";
+    XDG_BIN_HOME                = "$HOME/.local/bin";
+    XDG_DATA_HOME               = "$HOME/.local/share";
+    XDG_STATE_HOME              = "$HOME/.local/state";
+    LESSHISTFILE                = "-";
+    LESS                        = "-R";
+    FZF_DEFAULT_OPTS            = "--layout=reverse --height 40%";
+    CARGO_HOME                  = "$HOME/.local/share/cargo";
+    GOPATH                      = "$HOME/.local/share/go";
+    GNUPGHOME                   = "$HOME/.local/share/gnupg";
+    NODE_REPL_HISTORY           = "$HOME/.local/share/node_repl_history";
+    _JAVA_AWT_WM_NONREPARENTING = "1";
   };
 
   environment.localBinInPath  = true;
@@ -141,9 +149,20 @@
   # ---------------------------------------------------------------------------
   # Fonts
   # ---------------------------------------------------------------------------
-  fonts.packages = with pkgs; [
-    nerd-fonts.jetbrains-mono
-  ];
+  fonts = {
+    packages = with pkgs; [
+      nerd-fonts.jetbrains-mono
+      noto-fonts
+      noto-fonts-color-emoji
+      noto-fonts-cjk-sans
+    ];
+    fontconfig.defaultFonts = {
+      serif     = [ "Noto Serif" "Noto Color Emoji" ];
+      sansSerif = [ "Noto Sans" "Noto Color Emoji" ];
+      monospace = [ "JetBrainsMono Nerd Font" "Noto Color Emoji" ];
+      emoji     = [ "Noto Color Emoji" ];
+    };
+  };
 
   # ---------------------------------------------------------------------------
   # Audio — Pipewire (PulseAudio + ALSA + JACK compatibility)

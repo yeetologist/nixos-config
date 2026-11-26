@@ -17,7 +17,7 @@
 
         modules-left   = [ "custom/launcher" "niri/workspaces" "wlr/taskbar" ];
         modules-center = [ ];
-        modules-right  = [ "tray" "cpu" "memory" "network" "bluetooth" "pulseaudio" "battery" "clock" "custom/notifications" "custom/power" ];
+        modules-right  = [ "custom/recording" "tray" "cpu" "memory" "network" "bluetooth" "pulseaudio" "battery" "clock" "custom/notifications" "custom/power" ];
 
         # -- Left: Start button, workspaces, open windows taskbar --
         "custom/launcher" = {
@@ -41,7 +41,16 @@
           ignore-list     = [ ];
         };
 
-        # -- Right: System tray, stats, status, stacked clock --
+        # -- Right: Recording badge, system tray, stats, status, stacked clock --
+        "custom/recording" = {
+          exec           = "sh -c 'p=$(cat /tmp/record-menu.pid 2>/dev/null); [ -n \"$p\" ] && kill -0 \"$p\" 2>/dev/null && echo \"󰑋 REC\"'";
+          interval       = 2;
+          signal         = 9;
+          tooltip        = true;
+          tooltip-format = "Recording active — click or press Mod+Alt+R to stop";
+          on-click       = "record-menu";
+        };
+
         tray = {
           icon-size = 16;
           spacing   = 8;
@@ -205,6 +214,12 @@
       #custom-power {
         padding: 0 12px;
         color: #f7768e;
+      }
+
+      #custom-recording {
+        padding: 0 10px;
+        color: #f7768e;
+        font-weight: bold;
       }
 
       #clock {

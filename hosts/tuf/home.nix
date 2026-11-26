@@ -27,7 +27,7 @@
   programs.zoxide.enable = true;                         # `z <dir>`, hooks into nushell
   programs.direnv = { enable = true; nix-direnv.enable = true; }; # per-project dev shells on `cd`
 
-  # Laptop-only desktop services: Bluetooth tray applet and auto-suspend on idle.
+  # Laptop-only desktop services: Bluetooth tray applet, idle suspend, and low-battery alerts.
   services.blueman-applet.enable = true;
   services.swayidle.timeouts = [
     {
@@ -35,6 +35,46 @@
       command = "systemctl suspend";
     }
   ];
+
+  systemd.user.services.low-battery-alert = {
+    Unit.Description = "Send critical notification on low battery";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.writeShellApplication {
+        name = "low-battery-alert";
+        runtimeInputs = with pkgs; [ libnotify coreutils ];
+        text = ''
+          state="/tmp/low-battery-notified"
+          for bat in /sys/class/power_supply/BAT*; do
+            [[ -r "$bat/capacity" && -r "$bat/status" ]] || continue
+            cap=$(cat "$bat/capacity")
+            status=$(cat "$bat/status")
+            if [[ "$status" != "Discharging" ]]; then
+              rm -f "$state"
+              exit 0
+            fi
+            prev=$(cat "$state" 2>/dev/null || echo 100)
+            if (( cap <= 7 && prev > 7 )); then
+              notify-send -u critical "Battery critical ($cap%)" "Plug in charger now."
+              echo 7 > "$state"
+            elif (( cap <= 15 && prev > 15 )); then
+              notify-send -u critical "Battery low ($cap%)" "Plug in charger soon."
+              echo 15 > "$state"
+            fi
+          done
+        '';
+      }}/bin/low-battery-alert";
+    };
+  };
+
+  systemd.user.timers.low-battery-alert = {
+    Unit.Description = "Check laptop battery level every 2 minutes";
+    Timer = {
+      OnBootSec = "1m";
+      OnUnitActiveSec = "2m";
+    };
+    Install.WantedBy = [ "timers.target" ];
+  };
 
   programs.zed-editor.package = pkgs.zed-editor; # settings come from modules/home/zed.nix
 

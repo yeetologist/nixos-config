@@ -44,6 +44,7 @@ let
                 ("Print / Mod+Shift+S", "Interactive screenshot"),
                 ("Ctrl + Print",        "Screenshot screen"),
                 ("Alt + Print",         "Screenshot window"),
+                ("Mod + Alt + R",       "Record screen / audio"),
                 ("Vol + / - / Mute",    "Volume +/-10% / mute"),
                 ("Mic Mute",            "Mute microphone"),
                 ("Play / Prev / Next",  "Media controls"),

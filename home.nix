@@ -11,10 +11,12 @@
     ./modules/home/hotkey-overlay.nix
     ./modules/home/niri.nix
     ./modules/home/nvim.nix
+    ./modules/home/record-menu.nix
     ./modules/home/rofi.nix
     ./modules/home/waybar.nix
     ./modules/home/mpv.nix
     ./modules/home/yazi.nix
+    ./modules/home/zathura.nix
     ./modules/home/starship.nix
     ./modules/home/nushell.nix
     ./modules/home/gh.nix
@@ -53,7 +55,6 @@
     xwayland-satellite # XWayland for apps that don't support Wayland yet
     swaylock           # Wayland screen locker
     orca               # screen reader
-    zathura            # document viewer
 
     # Clipboard & desktop controls
     wl-clipboard       # wl-copy / wl-paste for Wayland

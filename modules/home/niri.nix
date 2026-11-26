@@ -6,7 +6,14 @@
     hotkey-overlay.hide-not-bound = true;
 
     input = {
-      keyboard.xkb.layout = "us";
+      keyboard = {
+        xkb = {
+          layout = "us";
+          options = "caps:escape";
+        };
+        repeat-delay = 350;
+        repeat-rate = 60;
+      };
       touchpad = {
         tap = true;
         dwt = true;
