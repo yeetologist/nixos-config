@@ -1,6 +1,65 @@
 # modules/home/waybar.nix
 { pkgs, ... }:
 
+let
+  herdrBtop = pkgs.writeShellApplication {
+    name = "herdr-btop";
+    runtimeInputs = with pkgs; [
+      coreutils
+      gawk
+      jq
+      procps
+    ];
+    text = ''
+      # Find an existing Niri window hosting a live herdr client (not the headless server).
+      find_herdr_window() {
+        local windows_json pid cur win_id
+        windows_json=$(niri msg -j windows 2>/dev/null) || return 1
+        while read -r pid; do
+          [ -n "$pid" ] || continue
+          cur="$pid"
+          while [ -n "$cur" ] && [ "$cur" -gt 1 ]; do
+            win_id=$(printf '%s' "$windows_json" | jq -r --argjson p "$cur" '[.[] | select(.pid == $p) | .id] | first // empty')
+            if [ -n "$win_id" ]; then
+              printf '%s\n' "$win_id"
+              return 0
+            fi
+            cur=$(ps -o ppid= -p "$cur" 2>/dev/null | tr -d ' ') || break
+          done
+        done < <(ps -eo pid=,comm=,args= | awk '$2 == "herdr" && $4 != "server" { print $1 }')
+        return 1
+      }
+
+      if win_id=$(find_herdr_window); then
+        niri msg action focus-window --id "$win_id" >/dev/null 2>&1 || true
+      else
+        ghostty -e herdr </dev/null >/dev/null 2>&1 &
+        # Wait for the herdr server and initial workspace to be ready.
+        i=0
+        while [ "$i" -lt 50 ]; do
+          if herdr workspace list 2>/dev/null | jq -e '.result.workspaces | length > 0' >/dev/null 2>&1; then
+            break
+          fi
+          sleep 0.1
+          i=$((i + 1))
+        done
+      fi
+
+      # Focus an existing btop tab if one is already open; otherwise create one.
+      existing_tab=$(herdr tab list 2>/dev/null | jq -r '[.result.tabs[] | select(.label == "btop") | .tab_id] | first // empty' || true)
+      if [ -n "$existing_tab" ]; then
+        herdr tab focus "$existing_tab" >/dev/null 2>&1
+        exit 0
+      fi
+
+      tab_id=$(herdr tab create --label btop --focus | jq -r '.result.tab.tab_id')
+      pane_id=$(herdr pane list | jq -r --arg tid "$tab_id" '[.result.panes[] | select(.tab_id == $tid) | .pane_id] | first // empty')
+      if [ -n "$pane_id" ]; then
+        herdr pane run "$pane_id" exec btop >/dev/null 2>&1
+      fi
+    '';
+  };
+in
 {
   programs.waybar = {
     enable = true;
@@ -57,13 +116,17 @@
         };
 
         cpu = {
-          format   = "󰻠 {usage}%";
-          interval = 2;
+          format         = "󰻠 {usage}%";
+          interval       = 2;
+          tooltip-format = "CPU: {usage}%\nClick to open btop in herdr";
+          on-click       = "${herdrBtop}/bin/herdr-btop";
         };
 
         memory = {
-          format   = "󰍛 {percentage}%";
-          interval = 5;
+          format         = "󰍛 {percentage}%";
+          interval       = 5;
+          tooltip-format = "RAM: {used:0.1f}GiB / {total:0.1f}GiB ({percentage}%)\nClick to open btop in herdr";
+          on-click       = "${herdrBtop}/bin/herdr-btop";
         };
 
         network = {
@@ -207,7 +270,7 @@
         color: #c0caf5;
       }
 
-      #pulseaudio:hover, #network:hover, #bluetooth:hover, #clock:hover, #custom-notifications:hover, #custom-power:hover {
+      #cpu:hover, #memory:hover, #pulseaudio:hover, #network:hover, #bluetooth:hover, #clock:hover, #custom-notifications:hover, #custom-power:hover {
         background-color: rgba(192, 202, 245, 0.08);
       }
 
