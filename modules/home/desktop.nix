@@ -182,10 +182,9 @@ in
   };
 
   # ---------------------------------------------------------------------------
-  # Global dark theme (GTK + dconf + Qt)
+  # Global dark theme (GTK + dconf + Qt; prefer-dark is already set in home.nix)
   # ---------------------------------------------------------------------------
   gtk = {
-    enable = true;
     theme = {
       name = "Adwaita-dark";
       package = pkgs.gnome-themes-extra;
@@ -194,12 +193,9 @@ in
       name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
     };
-    gtk3.extraConfig.gtk-application-prefer-dark-theme = true;
-    gtk4.extraConfig.gtk-application-prefer-dark-theme = true;
   };
 
   dconf.settings."org/gnome/desktop/interface" = {
-    color-scheme = "prefer-dark";
     gtk-theme = "Adwaita-dark";
     icon-theme = "Papirus-Dark";
   };
