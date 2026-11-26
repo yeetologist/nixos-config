@@ -90,7 +90,7 @@
       "audio"          # direct audio device access
       "video"          # camera, GPU, backlight
     ];    
-    shell              = pkgs.zsh;
+    shell              = pkgs.nushell; # modules/home/nushell.nix (also listed in environment.shells below)
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGlSLNdvjdJ8JR54lwCXeEkBnfdEXh+wuzZV45dQLlLP"
     ];
@@ -123,6 +123,7 @@
   };
 
   environment.localBinInPath  = true;
+  environment.shells          = [ pkgs.nushell ]; # login shell must be in /etc/shells
   environment.defaultPackages = []; # opt-out of the default NixOS package set
 
   # System-level packages only — prefer home.packages for user tools.
@@ -217,7 +218,6 @@
   # Programs
   # ---------------------------------------------------------------------------
   programs = {
-    zsh.enable          = true;
     gnupg.agent.enable  = true;
     ssh.enableAskPassword = false; # don't pop up a GUI password dialog for SSH
 
