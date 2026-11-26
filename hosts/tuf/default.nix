@@ -51,6 +51,9 @@ in
   services.fwupd.enable = true;                 # firmware updates via LVFS (https://fwupd.org)
   services.opensnitch.enable = true;            # per-app firewall prompts (simplewall); UI: opensnitch-ui
   services.tailscale.enable = true;             # `sudo tailscale up` once to log in
+  # NextDNS DoH proxy on 127.0.0.1:53, used only after `set-wifi-dns` (away from home; at home the
+  # router's stubby handles DNS). DoH on 443, like Windows: DoT's port 853 is often blocked (the home router does).
+  services.nextdns = { enable = true; arguments = [ "-profile" "a3fc53" "-report-client-info" "-listen" "127.0.0.1:53" ]; };
   services.locate = { enable = true; package = pkgs.plocate; }; # `locate <name>` (Everything)
   programs.localsend.enable = true;             # also opens its firewall port
   programs.obs-studio.enable = true;

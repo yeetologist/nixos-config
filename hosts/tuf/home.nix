@@ -9,7 +9,7 @@ let
   binScriptNames = [
     "find-srt" "test-dns" "sort-screenshots" "save-yt-video" "copy-rclone-yazi"
     "clean-alldebrid" "sync-alldebrid" "upload-magnet" "upload-torrents" "update-alldebrid-apikey"
-    "sync-nextdns" "sync-account"
+    "sync-nextdns" "sync-account" "set-wifi-dns"
   ];
   # Wrapper, not a symlink: the scripts find lib/ and their key files next to their own path.
   binScript = name: pkgs.writeShellScriptBin name ''exec ${pkgs.nushell}/bin/nu ${binScripts}/${name}.nu "$@"'';
