@@ -8,7 +8,7 @@
     firefox google-chrome
 
     # Dev apps
-    antigravity jetbrains-toolbox android-studio android-tools github-desktop
+    antigravity t3code jetbrains-toolbox android-studio android-tools github-desktop
 
     # Chat, media, reading
     vesktop ayugram-desktop calibre suwayomi-server   # zotero: nixpkgs builds it on EOL Firefox ESR 140 (insecure)
