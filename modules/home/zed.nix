@@ -1,13 +1,11 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 
 {
   # Editor preferences from Windows. Private keys (agent, language_models, edit_predictions,
   # proxy, server_url, ssh_connections) stay out of this public repo: add them in Zed's UI.
-  # No package by default, so hosts without Zed (the VM) get only the settings file;
-  # hosts/tuf sets the package.
   programs.zed-editor = {
     enable = true;
-    package = lib.mkDefault null;
+    package = lib.mkDefault pkgs.zed-editor;
     mutableUserSettings = true; # changes made in Zed's UI keep working
     userSettings = {
       theme = { mode = "dark"; light = "One Light"; dark = "Ayu Dark"; };
