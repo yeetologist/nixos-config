@@ -30,8 +30,6 @@
       {
         matches = [ { app-id = "^com\\.saivert\\.pwvucontrol$"; } ];
         open-floating = true;
-        default-column-width = { fixed = 640; };
-        default-window-height = { fixed = 520; };
       }
     ];
 

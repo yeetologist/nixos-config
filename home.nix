@@ -27,6 +27,8 @@
 
   programs.home-manager.enable = true; # let HM manage itself
 
+  dconf.settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
+
   # ---------------------------------------------------------------------------
   # User packages
   # System-level tools live in configuration.nix; user-facing apps go here.
