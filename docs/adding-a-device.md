@@ -1,167 +1,237 @@
 # Adding a new device
 
-A **host** is one *kind* of machine (the VMware VM, a laptop model). Each host is a
-folder under `hosts/` plus one entry in `flake.nix`. Everything else
-(`configuration.nix`, `home.nix`, `modules/home/`) is shared by every host.
+Every command below is meant to be typed in a terminal: the installer ISO's console,
+or a shell on an installed machine. No GUI is needed.
 
-| Situation | What to do |
+## How hosts work
+
+A **host** is one *kind* of machine. Each host is a folder in `hosts/`, and the folder
+name is the name you install and rebuild with:
+
+```
+hosts/
+├── disk.nix              # disk layout shared by every host (what install.sh creates)
+├── nixos-btw/            # the VMware VM  →  github:yeetologist/nixos-config#nixos-btw
+│   ├── default.nix       #   VMware guest tools, shared folders
+│   ├── hardware-configuration.nix
+│   └── home.nix          #   VM clipboard sync (Home Manager)
+└── laptop/               # a new host     →  …#laptop
+```
+
+`flake.nix` turns every folder in `hosts/` into a system automatically. Adding a host
+never needs a `flake.nix` edit. Everything outside `hosts/` (`configuration.nix`,
+`home.nix`, `modules/home/`) is shared by all hosts.
+
+**Which path you need:**
+
+| Situation | Do |
 |---|---|
-| Another machine of a kind that already has a host (e.g. another VMware VM) | Skip to [Install](#4-install). No repo changes. |
-| A new kind of machine (new laptop model, desktop) | Follow every step once. Later machines of that kind only need [Install](#4-install). |
+| Another machine of a kind that already has a host (another VMware VM, a second identical laptop) | [Path A](#path-a-existing-host-just-install): install only. |
+| A new kind of machine, and you can push to GitHub from somewhere else | [Path B](#path-b-new-host-pushed-to-github-first): add the host, push, install. |
+| A new kind of machine, and it's your only one | [Path C](#path-c-new-host-only-machine-install-from-a-local-clone): add the host on the installer, install, push later. |
 
-## 1. Detect the hardware
+## Before any path: boot the installer
 
-Boot the NixOS installer ISO on the new machine. Get online (`nmtui` for wifi), then run:
+1. Write the NixOS installer ISO (from nixos.org) to a USB stick and boot the machine from it.
+2. Become root and get online:
 
 ```sh
-nixos-generate-config --show-hardware-config --no-filesystems
+sudo -i
+nmtui                                    # wifi: "Activate a connection". Wired usually works already.
+ping -c 2 github.com                     # check you're online
 ```
 
-This prints the drivers the machine needs: initrd modules such as `nvme` and `xhci_pci`,
-kernel modules and CPU microcode. `--no-filesystems` leaves disks out, because every
-host uses the same label-based layout that `install.sh` creates.
+---
 
-To get the output off the machine, run `passwd` on the ISO and `scp` it to your PC,
-or paste it into a gist.
+## Path A: existing host, just install
 
-## 2. Add the host folder
-
-Pick a short name, e.g. `laptop`. The VM's folder, `hosts/vm/`, is the example to copy.
-
-```
-hosts/laptop/
-├── default.nix                 # imports the file below + hardware-specific settings
-└── hardware-configuration.nix  # step 1's output + the disk block from hosts/vm
+```sh
+FLAKE=github:yeetologist/nixos-config#nixos-btw \
+  bash <(curl -sL https://raw.githubusercontent.com/yeetologist/nixos-config/main/install.sh)
 ```
 
-**`hardware-configuration.nix`**: paste the step 1 output. Then copy the
-`fileSystems."/"`, `"/home"`, `"/nix"`, `"/boot"` and `swapDevices` blocks from
-`hosts/vm/hardware-configuration.nix` unchanged. They point at the labels `nixos`,
-`BOOT` and `swap`, which `install.sh` creates on every machine.
+Replace `nixos-btw` with the host you want. Leaving out `FLAKE=…` installs `nixos-btw`.
+Then answer the prompts (see [The install prompts](#the-install-prompts)) and `reboot`.
 
-**`default.nix`**: start from this and add only what the hardware needs:
+---
 
-```nix
-{ pkgs, user, ... }:
+## Path B: new host, pushed to GitHub first
 
-{
-  imports = [ ./hardware-configuration.nix ];
+Use this when you have another computer (or the VM) that can push to GitHub.
 
-  # Examples, keep what applies:
-  # hardware.graphics.enable = true;            # GPU acceleration
-  # hardware.nvidia.open = true;                # plus services.xserver.videoDrivers = [ "nvidia" ];
-  # hardware.bluetooth.enable = true;
-  # services.power-profiles-daemon.enable = true; # laptop battery profiles
+### B1. On the new machine (installer): create the host
 
-  # Host-only Home Manager settings, if any (see hosts/vm/home.nix):
-  # home-manager.users.${user}.imports = [ ./home.nix ];
-}
+```sh
+nix-shell -p git                         # the installer may not have git
+git clone https://github.com/yeetologist/nixos-config -b main /tmp/nixos-config
+cd /tmp/nixos-config
+bash add-host.sh laptop                  # pick the name; lowercase, digits, '-'
 ```
 
-Leave out everything from `hosts/vm/`. Those settings (VMware guest tools, vmblock,
-`/mnt/hgfs`, clipboard sync) only work inside VMware.
+`add-host.sh` creates `hosts/laptop/` from this machine's hardware:
+- **`hardware-configuration.nix`**: the drivers it needs, detected by `nixos-generate-config`.
+- **`default.nix`**: imports the disk layout, and switches on battery and Bluetooth
+  support if the hardware has them. An NVIDIA GPU gets a commented-out line for you to review.
 
-## 3. Add the flake entry
+Review it and add anything else the machine needs (see [Common host settings](#common-host-settings)):
 
-`flake.nix` builds one host, `nixos-btw`. For a second host, move the
-`nixosSystem` call into a small function in the existing `let` block (next to
-`user`, `system`, `timezone`), and call it once per host:
-
-```nix
-  let
-    user     = "bam";
-    system   = "x86_64-linux";
-    timezone = "Asia/Jakarta";
-
-    mkHost = hostModule: nixpkgs.lib.nixosSystem {
-      inherit system;
-      specialArgs = { inherit inputs user timezone system; };
-      modules = [
-        ./configuration.nix
-        hostModule
-        inputs.niri.nixosModules.niri
-        nix-index-database.nixosModules.nix-index
-        home-manager.nixosModules.home-manager { /* unchanged home-manager block */ }
-      ];
-    };
-  in {
-    nixosConfigurations.nixos-btw = mkHost ./hosts/vm;
-    nixosConfigurations.laptop    = mkHost ./hosts/laptop;
-  };
+```sh
+nano hosts/laptop/default.nix            # Ctrl+O Enter to save, Ctrl+X to quit
 ```
 
-Commit and push to `main`: the install and rebuild commands below fetch from GitHub, not your local copy. Only machine and nowhere to push from? See [installing from a local clone](#only-one-machine-install-from-a-local-clone-push-later).
+### B2. Move the host to a machine that can push
 
-## 4. Install
+From the installer, print the two files:
 
-From the installer ISO, as root:
+```sh
+cat hosts/laptop/default.nix hosts/laptop/hardware-configuration.nix
+```
+
+Copy them to the other computer. Pick one way:
+- **SSH from the other computer**: on the installer run `passwd` (sets a password for
+  the live session) and `ip -4 addr` (shows its IP). Then on the other computer:
+  `scp -r root@<ip>:/tmp/nixos-config/hosts/laptop hosts/`
+- **Paste**: retype or paste the files into `hosts/laptop/` on the other computer.
+
+On the other computer, in the repo:
+
+```sh
+git pull
+git add hosts/laptop
+git commit -m "Add host laptop"
+git push origin main
+```
+
+### B3. Back on the new machine: install from GitHub
 
 ```sh
 FLAKE=github:yeetologist/nixos-config#laptop \
   bash <(curl -sL https://raw.githubusercontent.com/yeetologist/nixos-config/main/install.sh)
 ```
 
-Leave out `FLAKE=…` to install the default host, `nixos-btw` (the VM). The script asks for:
+Answer the prompts and `reboot`.
 
-1. **Disk**: from a list. It is wiped, unless you choose keep-home on a disk that already has this layout.
-2. **Mode**: only for a disk that already has this layout. Choose wipe, or keep `/home` and reinstall the system.
-3. **Swap size**: defaults to RAM, capped at 8 GiB.
-4. **Hostname**: unique per machine, written to `/etc/hostname`. The flake leaves it unset.
-5. **Password for `bam`**: typed twice. Root is locked.
-6. **Confirmation**: type the disk name.
+---
 
-Reboot. Log in on tty1 and niri starts automatically.
+## Path C: new host, only machine (install from a local clone)
 
-### Only one machine: install from a local clone, push later
+Nothing gets pushed before the install. The host lives in a local clone, and the
+script copies that clone onto the new system.
 
-If the new machine is your only one, you can't easily push the new host from
-somewhere else first. Do steps 1–3 on the ISO itself and install from the clone:
+### C1. Create the host on the installer
 
 ```sh
-nix-shell -p git                       # if the ISO has no git
+nix-shell -p git
 git clone https://github.com/yeetologist/nixos-config -b main /tmp/nixos-config
 cd /tmp/nixos-config
-nixos-generate-config --show-hardware-config --no-filesystems   # step 1, paste into hosts/laptop/
-#   ... create hosts/laptop/ and the flake entry (steps 2-3) with nano/vim ...
-git add -A                             # required: a flake can't see untracked files
+bash add-host.sh laptop
+nano hosts/laptop/default.nix            # review; see "Common host settings"
+git add -A                               # required: a flake can't see untracked files
+```
+
+No commit or GitHub login is needed yet. `add-host.sh` already staged its files.
+Run `git add -A` again after any edit that creates new files.
+
+### C2. Install from the clone
+
+```sh
 FLAKE=/tmp/nixos-config#laptop bash /tmp/nixos-config/install.sh
 ```
 
-No commit or GitHub login is needed for this. `git add` is enough, and the script
-refuses to start if anything is still untracked. After installing, it copies the clone
-to `~/nixos-config` on the new system, because `/tmp` on the ISO is lost at reboot.
-If `~/nixos-config` already exists (keep-home reinstall), it copies to
-`~/nixos-config.install-<date>` instead.
+The script refuses to start if anything is untracked. After installing, it copies the clone to
+`/home/bam/nixos-config` on the new system, because the installer's `/tmp` is lost at reboot.
+On a keep-home reinstall where that folder exists, it copies to
+`nixos-config.install-<date>` instead. Answer the prompts and `reboot`.
 
-After the first boot, rebuild from that folder until you push:
+### C3. After the first boot: rebuild locally, then push
+
+Until the host is on GitHub, rebuild from the local folder:
 
 ```sh
 sudo nixos-rebuild switch --flake ~/nixos-config#laptop
 ```
 
-When you're ready, log in to GitHub (`gh auth login` or an SSH key), then
-`git commit` and `git push` from `~/nixos-config`. From then on, the GitHub commands
-in this doc work for this host too.
+To push, log in to GitHub once, then commit:
 
-## 5. Day to day
+```sh
+cd ~/nixos-config
+gh auth login                            # GitHub.com → HTTPS → "Login with a web browser"; open the URL on your phone
+git add -A
+git commit -m "Add host laptop"
+git push origin main
+```
 
-Rebuild with the machine's host name (the flake attribute, not its hostname):
+`gh` isn't installed by default. Use `nix-shell -p gh` first, or add an SSH key to
+GitHub instead. From now on, the GitHub rebuild command below works for this host.
+
+---
+
+## The install prompts
+
+`install.sh` asks, in order:
+
+1. **Disk**: pick from the list (Enter = first). It is wiped unless you choose keep-home.
+2. **Mode**: only shown if the disk already has this layout. `w` wipes everything. `k`
+   keeps `/home` (your files and snapshots) and reinstalls the system.
+3. **Swap size** in GiB: default is your RAM, capped at 8.
+4. **Hostname**: this machine's network name, unique per machine (e.g. `laptop-01`).
+   It is separate from the host folder name.
+5. **Password for `bam`**: typed twice. Root has no password.
+6. **Confirmation**: type the disk name (e.g. `/dev/nvme0n1`) to start.
+
+After `reboot`, log in on the console (tty1) and niri starts automatically.
+
+## Day to day
+
+Rebuild a machine from GitHub with its **host folder name**:
 
 ```sh
 sudo nixos-rebuild switch --refresh --flake github:yeetologist/nixos-config#laptop
 ```
 
-The `up` alias in `home.nix` rebuilds `#nixos-btw`. On other hosts, type the full
-command above, or make the alias host-specific.
+The `up` alias in `home.nix` runs this for `#nixos-btw` only. Type the command in
+full on other hosts.
 
-To rename a machine, edit `/etc/hostname` as root and reboot. `hostnamectl` cannot
-write it on NixOS.
+Rename a machine (hostname, not host folder):
+
+```sh
+echo new-name | sudo tee /etc/hostname && sudo reboot    # hostnamectl can't write it on NixOS
+```
+
+Regenerate a host's drivers after a hardware change. Run on that machine, inside
+the repo:
+
+```sh
+sudo nixos-generate-config --show-hardware-config --no-filesystems > hosts/laptop/hardware-configuration.nix
+```
+
+## Common host settings
+
+Add these to `hosts/<name>/default.nix` inside the `{ … }` block, only if the machine has the hardware:
+
+```nix
+hardware.bluetooth.enable = true;                 # Bluetooth
+services.power-profiles-daemon.enable = true;     # laptop: battery power profiles
+services.upower.enable = true;                    # laptop: battery status
+hardware.nvidia.open = true;                      # NVIDIA GPU (RTX 20xx or newer)
+services.xserver.videoDrivers = [ "nvidia" ];     #   …needed with the line above
+services.fprintd.enable = true;                   # fingerprint reader
+```
+
+Settings for your user on just this host go in `hosts/<name>/home.nix`. Use
+`hosts/nixos-btw/home.nix` as the example, and uncomment the
+`home-manager.users.${user}.imports` line in `default.nix`.
+
+Don't copy anything from `hosts/nixos-btw/`. VMware guest tools, shared folders and the
+clipboard sync only work inside VMware.
 
 ## Gotchas
 
-- **Line endings**: on Windows the checkout uses CRLF. Commits are fine because git
-  converts them to LF. Before building a copy of the working tree on Linux, strip
-  the CR characters (`sed -i 's/\r$//'`), or shell scripts inside the config break.
-- **Flakes only see files git tracks**: `git add` a new host folder before building it locally.
-- **Same hardware, same host**: a second laptop of the same model needs no new folder.
-  Only add a host when the drivers differ.
+- **Untracked files are invisible**: a flake only sees files git knows about. After
+  creating files, run `git add -A` before building or installing from a local clone.
+- **Windows line endings**: a checkout on Windows uses CRLF. Commits are fine, because
+  git converts them to LF. If you copy the working tree to Linux to build it, strip
+  the CR characters first (`find . -type f -exec sed -i 's/\r$//' {} +`), or the shell
+  scripts inside the config break.
+- **Same hardware, same host**: a second laptop of the same model uses the existing
+  host folder ([Path A](#path-a-existing-host-just-install)). Give it a different hostname at the prompt.

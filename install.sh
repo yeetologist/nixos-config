@@ -4,7 +4,7 @@
 # From a local clone (new host not pushed yet), copied to ~/nixos-config on the new system:
 #   FLAKE=/tmp/nixos-config#laptop bash /tmp/nixos-config/install.sh
 # Modes: wipe the whole disk, or reinstall keeping /home (@home and its snapshots survive).
-# Layout must match hosts/vm/hardware-configuration.nix: labels BOOT/swap/nixos, subvolumes @ @home @nix.
+# Layout must match hosts/disk.nix: labels BOOT/swap/nixos, subvolumes @ @home @nix.
 set -euo pipefail
 
 flake=${FLAKE:-github:yeetologist/nixos-config#nixos-btw}

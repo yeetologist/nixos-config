@@ -1,9 +1,9 @@
-# VMware guest: everything that only makes sense inside the VM.
-# A bare-metal host gets its own hosts/<name>/ with its own hardware-configuration.nix.
+# Host nixos-btw (VMware VM): everything that only makes sense inside the VM.
+# New machines: see docs/adding-a-device.md.
 { pkgs, user, ... }:
 
 {
-  imports = [ ./hardware-configuration.nix ];
+  imports = [ ../disk.nix ./hardware-configuration.nix ];
 
   home-manager.users.${user}.imports = [ ./home.nix ];
 

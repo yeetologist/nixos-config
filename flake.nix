@@ -44,8 +44,9 @@
     user     = "bam";
     system   = "x86_64-linux";
     timezone = "Asia/Jakarta";
-  in {
-    nixosConfigurations.nixos-btw = nixpkgs.lib.nixosSystem {
+
+    # One NixOS system per host folder: shared config + hosts/<name>/.
+    mkHost = hostDir: nixpkgs.lib.nixosSystem {
       inherit system;
 
       # Passed as named arguments to every NixOS module function.
@@ -53,7 +54,7 @@
 
       modules = [
         ./configuration.nix
-        ./hosts/vm # VMware guest bits + this VM's hardware config
+        hostDir # this machine's hardware, disk layout and host-only settings
 
         # Niri compositor system integration.
         inputs.niri.nixosModules.niri
@@ -61,7 +62,7 @@
         # nix-index DB (enables `nix-locate` and command-not-found hook).
         nix-index-database.nixosModules.nix-index
 
-        # Home Manager integrated into nixos-rebuild â€” no separate `hm switch`.
+        # Home Manager integrated into nixos-rebuild — no separate `hm switch`.
         home-manager.nixosModules.home-manager {
           home-manager = {
             useGlobalPkgs      = true;   # share system nixpkgs, no extra eval
@@ -76,5 +77,11 @@
         }
       ];
     };
+
+    # Every folder in hosts/ is a host: hosts/laptop -> nixosConfigurations.laptop (add-host.sh creates them).
+    hostNames = builtins.attrNames
+      (nixpkgs.lib.filterAttrs (_: type: type == "directory") (builtins.readDir ./hosts));
+  in {
+    nixosConfigurations = nixpkgs.lib.genAttrs hostNames (name: mkHost ./hosts/${name});
   };
 }
