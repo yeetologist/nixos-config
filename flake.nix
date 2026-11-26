@@ -53,6 +53,7 @@
 
       modules = [
         ./configuration.nix
+        ./hosts/vm # VMware guest bits + this VM's hardware config
 
         # Niri compositor system integration.
         inputs.niri.nixosModules.niri

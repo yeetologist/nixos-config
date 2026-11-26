@@ -6,10 +6,6 @@
 { lib, pkgs, config, inputs, user, timezone, ... }:
 
 {
-  imports = [
-    ./hardware-configuration.nix
-  ];
-
   # ---------------------------------------------------------------------------
   # Nixpkgs
   # ---------------------------------------------------------------------------
@@ -70,38 +66,6 @@
   #     }];
   #   };
   # };
-
-  # ---------------------------------------------------------------------------
-  # VMware shared folder
-  # ---------------------------------------------------------------------------
-
-  fileSystems."/mnt/hgfs" = {
-    device = ".host:/";
-    fsType = "fuse.vmhgfs-fuse";
-    options = [
-      "allow_other"
-      "uid=1000"
-      "gid=100"
-      "auto_unmount"
-      "defaults"
-      "nofail"  # don't block boot if VMware shared folders aren't available
-      # These two lines fix the boot timing issue:
-      "x-systemd.automount"
-      "x-systemd.requires=vmtoolsd.service"
-    ];
-  };
-
-  # ---------------------------------------------------------------------------
-  # VMware guest integration
-  # ---------------------------------------------------------------------------
-  virtualisation.vmware.guest = {
-    enable = true;
-    headless = false; # enable display/input guest additions (SVGA, drag-drop, etc.)
-  };
-  # shortcut: nixpkgs' vmblock unit uses Type=fuse but only mount.fuse3 exists; drop once nixpkgs fixes it.
-  systemd.packages = [
-    (pkgs.writeTextDir "etc/systemd/system/run-vmblock\\x2dfuse.mount.d/fuse3.conf" "[Mount]\nType=fuse3\n")
-  ];
 
   # ---------------------------------------------------------------------------
   # Localisation
@@ -262,11 +226,6 @@
     nix-index-database.comma.enable = true;
     command-not-found.enable = false; # replaced by nix-index's hook
   };
-
-  # ---------------------------------------------------------------------------
-  # Virtualisation (remove for bare-metal installs)
-  # ---------------------------------------------------------------------------
-  # virtualisation.vmware.guest.enable = true;
 
   # ---------------------------------------------------------------------------
   # Hardware

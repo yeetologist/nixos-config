@@ -2,7 +2,7 @@
 # Install nixos-btw from the NixOS installer ISO (as root):
 #   bash <(curl -sL https://raw.githubusercontent.com/yeetologist/nixos-config/main/install.sh)
 # Modes: wipe the whole disk, or reinstall keeping /home (@home and its snapshots survive).
-# Layout must match hardware-configuration.nix: labels BOOT/swap/nixos, subvolumes @ @home @nix.
+# Layout must match hosts/vm/hardware-configuration.nix: labels BOOT/swap/nixos, subvolumes @ @home @nix.
 set -euo pipefail
 
 flake=${FLAKE:-github:yeetologist/nixos-config#nixos-btw}
