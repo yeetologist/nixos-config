@@ -107,6 +107,9 @@
 
   # System-level packages only — prefer home.packages for user tools.
   environment.systemPackages = with pkgs; [
+    # Rust drop-in replacement for GNU coreutils in PATH (native nixpkgs, no flake needed)
+    (lib.hiPrio uutils-coreutils-noprefix)
+
     # Network
     wget
 
