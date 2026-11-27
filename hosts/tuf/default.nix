@@ -11,7 +11,10 @@ in
   home-manager.users.${user}.imports = [ ./home.nix ];
 
   # --- ASUS laptop ----------------------------------------------------------------
-  services.asusd.enable = true;                 # fan profiles, keyboard backlight, charge limit (Armoury Crate)
+  services.asusd = {                            # fan profiles, keyboard backlight, charge limit (G-Helper / Armoury Crate)
+    enable = true;
+    enableUserService = true;                   # user service for rog-control-center GUI
+  };
   services.power-profiles-daemon.enable = true; # asusd drives the platform profile through it
   services.upower.enable = true;                # battery status
   hardware.bluetooth.enable = true;             # Realtek Bluetooth (wifi: rtw89, in the kernel)
