@@ -244,7 +244,7 @@
 
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
-      auto-optimise-store   = false;
+      auto-optimise-store   = true;  # dedupe each new path on write (replaceDependencies copies)
       max-jobs              = "auto"; # parallel builds = number of CPUs
       cores                 = 0;      # each job uses all available cores
 

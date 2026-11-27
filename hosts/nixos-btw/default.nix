@@ -24,6 +24,16 @@ in
     (pkgs.writeTextDir "etc/systemd/system/run-vmblock\\x2dfuse.mount.d/fuse3.conf" "[Mount]\nType=fuse3\n")
   ];
 
+  # Whole system on uutils (Ubuntu-style): rewrite GNU coreutils refs in the built closure, no rebuild.
+  # Replacement keeps GNU's store name since replaceDependencies needs equal-length paths.
+  system.replaceDependencies.replacements = map (old: {
+    oldDependency = old;
+    newDependency = pkgs.runCommand old.name { } ''
+      mkdir -p $out/bin
+      ln -s ${pkgs.uutils-coreutils-noprefix}/bin/* $out/bin/
+    '';
+  }) [ pkgs.coreutils pkgs.coreutils-full ];
+
   # VMware shared folders.
   fileSystems."/mnt/hgfs" = {
     device = ".host:/";
